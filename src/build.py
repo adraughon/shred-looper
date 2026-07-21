@@ -238,7 +238,7 @@ def main():
     }
 
     # ---- The World (Austin's own arrangement; labels from bar 1) ----
-    tw_bpm = midi_bpm(SRC / 'midi' / 'the_world.mid')
+    tw_bpm = 176.8  # user-stated base; export transport was left at 40bpm
     tw_hard = hardest_window(tw_notes, tw_bpm)
     tw_last = max(n['b'] + n['d'] for n in tw_notes)
     tw = {
