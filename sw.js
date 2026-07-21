@@ -1,5 +1,5 @@
 /* Shred Looper service worker — stale-while-revalidate keyed on build. */
-const CACHE = 'sl-67819a150c';
+const CACHE = 'sl-ec9ea8864f';
 const PRECACHE = ['./', './index.html', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
