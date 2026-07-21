@@ -200,7 +200,7 @@ def main():
     ct_notes = parse_song(SRC / 'midi' / 'CRAZY_TRAIN_MANUALLY.mid', 3)
     ds_notes = parse_song(SRC / 'midi' / 'dolphinshoalsmanual.mid', 2,
                           trim_before_beat=(18 - 1) * 4)
-    tw_notes = parse_song(SRC / 'midi' / 'THE_WORLD_bars110-135.mid', 0)
+    tw_notes = parse_song(SRC / 'midi' / 'the_world.mid', 2)
 
     # ---- Crazy Train ----
     ct_hard = hardest_window(ct_notes, 138.7,
@@ -237,13 +237,13 @@ def main():
         ],
     }
 
-    # ---- The World (transcribed bars 110-135; labels read 110+) ----
-    tw_bpm = midi_bpm(SRC / 'midi' / 'THE_WORLD_bars110-135.mid')
+    # ---- The World (Austin's own arrangement; labels from bar 1) ----
+    tw_bpm = midi_bpm(SRC / 'midi' / 'the_world.mid')
     tw_hard = hardest_window(tw_notes, tw_bpm)
     tw_last = max(n['b'] + n['d'] for n in tw_notes)
     tw = {
         'id': 'world', 'name': 'The World', 'emoji': '🎱', 'theme': 'world',
-        'origBpm': tw_bpm, 'barOffset': 109,
+        'origBpm': tw_bpm, 'barOffset': 0,
         'totalBars': int(math.ceil(tw_last / 4.0)),
         'notes': tw_notes,
         'sections': [],
