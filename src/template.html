@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#111111">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="__ICON192__">
+<title>Shred Looper</title>
+<style>
+:root{
+  --bg:#101010; --panel:#1a1a1a; --fg:#f2f2f2; --dim:#9a9a9a;
+  --accent:#e6b93c; --accent2:#e6b93c; --grid:#2c2c2c; --band:none;
+}
+body[data-theme="rhoads"]{
+  --bg:#0b0b0b; --panel:#181818; --fg:#ffffff; --dim:#8f8f8f;
+  --accent:#e03131; --accent2:#ff6b6b; --grid:#262626; --band:none;
+}
+body[data-theme="dolphin"]{
+  --bg:#f7e8c3; --panel:#fff7e2; --fg:#0a6e6e; --dim:#4d9c96;
+  --accent:#00b8d4; --accent2:#0090b0; --grid:#e4d3a8;
+  --band:radial-gradient(circle at 8% 50%, #bdeef7 0 6px, transparent 7px),
+        radial-gradient(circle at 26% 30%, #bdeef7 0 4px, transparent 5px),
+        radial-gradient(circle at 44% 60%, #bdeef7 0 7px, transparent 8px),
+        radial-gradient(circle at 63% 35%, #bdeef7 0 5px, transparent 6px),
+        radial-gradient(circle at 82% 55%, #bdeef7 0 6px, transparent 7px);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0;}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:"Archivo Black", ui-monospace, Menlo, monospace;
+  min-height:100vh; padding:env(safe-area-inset-top) 10px 24px;
+  user-select:none; -webkit-user-select:none; touch-action:manipulation;
+}
+header{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; padding:10px 2px 6px;}
+h1{font-size:clamp(20px,6vw,28px); margin:0; line-height:1.1; letter-spacing:.5px;}
+#diffline{font-size:12px; color:var(--dim); margin-top:4px; font-family:ui-monospace,Menlo,monospace;}
+#songSel{
+  background:var(--panel); color:var(--fg); border:1px solid var(--grid);
+  border-radius:10px; font:inherit; font-size:14px; padding:10px 8px; min-height:44px;
+}
+#band{height:14px; border-radius:7px; background:var(--band); margin:2px 0 8px;}
+#laneWrap{position:relative; width:100%;}
+canvas#lane{width:100%; height:40vh; max-height:380px; display:block;
+  background:var(--panel); border:1px solid var(--grid); border-radius:12px;}
+.row{display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap;}
+button{
+  background:var(--panel); color:var(--fg); border:1px solid var(--grid);
+  border-radius:12px; font:inherit; font-size:15px; padding:0 14px;
+  min-height:48px; min-width:48px; cursor:pointer;
+}
+button.primary{background:var(--accent); color:var(--bg); border-color:var(--accent); font-size:18px; flex:1;}
+button.on{outline:3px solid var(--accent);}
+button:active{transform:scale(.97);}
+#loopInfo{font-size:12px; color:var(--dim); font-family:ui-monospace,Menlo,monospace; min-height:16px; margin-top:6px;}
+.block{background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:10px; margin-top:12px;}
+.block h3{margin:0 0 8px; font-size:12px; color:var(--dim); letter-spacing:1px; text-transform:uppercase;}
+input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
+#pctBig{font-size:34px; text-align:center;}
+#bpmSmall{font-size:12px; color:var(--dim); text-align:center; font-family:ui-monospace,Menlo,monospace;}
+.seg{display:flex; gap:6px;}
+.seg button{flex:1;}
+.presets button{flex:1; font-family:ui-monospace,Menlo,monospace;}
+#sections{display:flex; flex-wrap:wrap; gap:8px;}
+#sections button{font-size:13px; text-align:left; line-height:1.25; padding:8px 12px;}
+#sections .sub{display:block; font-size:10px; color:var(--dim); font-family:ui-monospace,Menlo,monospace; font-style:normal;}
+label.set{display:flex; justify-content:space-between; align-items:center; gap:10px; margin:8px 0; font-size:13px;}
+label.set input{width:90px; background:var(--bg); color:var(--fg); border:1px solid var(--grid);
+  border-radius:8px; font:inherit; font-size:15px; padding:8px; min-height:40px; text-align:right;}
+details summary{cursor:pointer; font-size:12px; color:var(--dim); letter-spacing:1px; text-transform:uppercase; min-height:44px; display:flex; align-items:center;}
+.trainer{display:flex; align-items:center; gap:10px; font-size:13px;}
+.trainer input{width:64px; background:var(--bg); color:var(--fg); border:1px solid var(--grid);
+  border-radius:8px; font:inherit; font-size:15px; padding:8px; min-height:40px; text-align:center;}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1 id="title">Shred Looper</h1>
+    <div id="diffline"></div>
+  </div>
+  <select id="songSel"></select>
+</header>
+<div id="band"></div>
+<div id="laneWrap"><canvas id="lane"></canvas></div>
+<div id="loopInfo"></div>
+
+<div class="row">
+  <button id="btnPlay" class="primary">▶︎ Play</button>
+  <button id="btnStop">⏹</button>
+  <button id="btnLoop">🔁</button>
+  <button id="btnClear">✕</button>
+</div>
+<div class="row">
+  <button id="nShiftL">◀︎ ½</button>
+  <button id="nShiftR">½ ▶︎</button>
+  <button id="nSizeD">−½</button>
+  <button id="nSizeU">+½</button>
+</div>
+
+<div class="block">
+  <h3>Tempo</h3>
+  <div id="pctBig">100%</div>
+  <div id="bpmSmall"></div>
+  <input type="range" id="tempo" min="30" max="110" value="100" step="1">
+  <div class="row presets">
+    <button data-pct="50">50</button><button data-pct="70">70</button>
+    <button data-pct="85">85</button><button data-pct="100">100</button>
+  </div>
+  <div class="trainer" style="margin-top:8px">
+    <button id="btnTrainer">🏃 Trainer</button>
+    <span>+1% every</span><input type="number" id="trainN" value="4" min="1" max="99">
+    <span>loops</span>
+  </div>
+</div>
+
+<div class="block">
+  <h3>Backing</h3>
+  <div class="seg">
+    <button data-back="off">Off</button>
+    <button data-back="click">Click</button>
+    <button data-back="drums" class="on">Drums</button>
+  </div>
+</div>
+
+<div class="block">
+  <h3>Sections</h3>
+  <div id="sections"></div>
+</div>
+
+<details class="block">
+  <summary>Setup</summary>
+  <label class="set">Original BPM <input type="number" id="setBpm" step="0.1"></label>
+  <label class="set">Bend scale <input type="number" id="setBend" step="0.1" value="1"></label>
+  <label class="set">Lead vol <input type="number" id="setLead" step="0.05" value="0.9"></label>
+  <label class="set">Backing vol <input type="number" id="setBack" step="0.05" value="0.8"></label>
+</details>
+
+<script>
+'use strict';
+const DATA = "__DATA_JSON__";
+
+/* ---------------- state ---------------- */
+const LS = 'shredlooper.v1.';
+let song = null;            // current song object
+let notes = [];             // song.notes
+let totalBeats = 0;
+let ctx = null, master = null, leadGain = null, backGain = null;
+let playBus = null;         // per-play gain: pause/stop silences instantly
+let drumBufs = {};          // decoded kick/snare/hat
+let playing = false, warmed = false;
+let token = 0;              // intent token: bump cancels in-flight play/sched
+let V0 = 0, T0 = 0, spb = 0.5, schedV = 0, noteIdx = 0, gridV = 0;
+let curBeat = 0;
+let loopOn = false, loopA = 0, loopB = 0;
+let pct = 100, backing = 'drums';
+let trainerOn = false, loopCount = 0;
+let schedTimer = null;
+const LOOKAHEAD = 0.18, TICK = 30;
+
+const $ = (id) => document.getElementById(id);
+
+/* ---------------- persistence ---------------- */
+function saveState(){
+  try{ localStorage.setItem(LS + song.id, JSON.stringify({
+    pct, loopOn, loopA, loopB, backing,
+    bendScale: +$('setBend').value, leadVol: +$('setLead').value,
+    backVol: +$('setBack').value, origBpm: +$('setBpm').value,
+    trainN: +$('trainN').value,
+  })); }catch(e){}
+}
+function loadState(){
+  let s = null;
+  try{ s = JSON.parse(localStorage.getItem(LS + song.id) || 'null'); }catch(e){}
+  pct = s && s.pct || 100;
+  loopOn = !!(s && s.loopOn); loopA = s ? s.loopA : 0; loopB = s ? s.loopB : 0;
+  backing = (s && s.backing) || 'drums';
+  $('setBend').value = s && s.bendScale != null ? s.bendScale : 1;
+  $('setLead').value = s && s.leadVol != null ? s.leadVol : 0.9;
+  $('setBack').value = s && s.backVol != null ? s.backVol : 0.8;
+  $('setBpm').value = s && s.origBpm ? s.origBpm : song.origBpm;
+  $('trainN').value = s && s.trainN ? s.trainN : 4;
+}
+
+/* ---------------- audio core ---------------- */
+function ensureCtx(){
+  if(ctx) return;
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  master = ctx.createGain(); master.connect(ctx.destination);
+  leadGain = ctx.createGain(); leadGain.connect(master);
+  backGain = ctx.createGain(); backGain.connect(master);
+  const b64 = (u) => {
+    const raw = atob(u.split(',')[1]);
+    const a = new Uint8Array(raw.length);
+    for(let i = 0; i < raw.length; i++) a[i] = raw.charCodeAt(i);
+    return a.buffer;
+  };
+  for(const k of ['kick','snare','hat']){
+    ctx.decodeAudioData(b64(DATA.drums[k]),
+      (buf) => { drumBufs[k] = buf; },
+      () => { console.warn('drum decode failed', k); });
+  }
+}
+function warmup(){
+  // silent buffer: unlocks/primes mobile audio path
+  const buf = ctx.createBuffer(1, 220, ctx.sampleRate);
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.connect(master); src.start();
+}
+function applyVols(){
+  if(!ctx) return;
+  leadGain.gain.value = +$('setLead').value;
+  backGain.gain.value = +$('setBack').value;
+}
+
+/* pluck voice: dual detuned saws -> lowpass with envelope -> gain env */
+function pluck(t, note, spbNow){
+  const f0 = 440 * Math.pow(2, (note.p - 69) / 12);
+  const vel = note.v / 127;
+  const dur = Math.max(0.05, note.d * spbNow);
+  const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+  o1.type = 'sawtooth'; o2.type = 'sawtooth';
+  o1.detune.value = -7; o2.detune.value = 7;
+  const bendScale = +$('setBend').value || 1;
+  const semi2f = (s) => f0 * Math.pow(2, (s * bendScale) / 12);
+  let fStart = f0;
+  if(note.bd && note.bd.length && note.bd[0][0] <= 1e-6) fStart = semi2f(note.bd[0][1]);
+  o1.frequency.setValueAtTime(fStart, t);
+  o2.frequency.setValueAtTime(fStart, t);
+  if(note.bd){
+    for(const [off, semi] of note.bd){
+      if(off <= 1e-6) continue;
+      const bt = Math.min(t + off * spbNow, t + dur);
+      o1.frequency.linearRampToValueAtTime(semi2f(semi), bt);
+      o2.frequency.linearRampToValueAtTime(semi2f(semi), bt);
+    }
+  }
+  const filt = ctx.createBiquadFilter();
+  filt.type = 'lowpass'; filt.Q.value = 1.2;
+  const c0 = Math.min(11000, 900 + f0 * 7);
+  filt.frequency.setValueAtTime(c0, t);
+  filt.frequency.exponentialRampToValueAtTime(Math.max(300, f0 * 1.6),
+      t + Math.min(0.35, dur));
+  const g = ctx.createGain();
+  const peak = 0.16 + 0.34 * vel;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(peak, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.001, peak * 0.35),
+      t + Math.max(0.03, Math.min(0.25, dur * 0.6)));
+  g.gain.setTargetAtTime(0.0001, t + dur - 0.02, 0.018);
+  o1.connect(filt); o2.connect(filt); filt.connect(g); g.connect(playBus);
+  o1.start(t); o2.start(t);
+  o1.stop(t + dur + 0.2); o2.stop(t + dur + 0.2);
+}
+function hitDrum(name, t, gain){
+  const buf = drumBufs[name];
+  if(!buf) return;
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const g = ctx.createGain(); g.gain.value = gain;
+  src.connect(g); g.connect(playBus); // through play bus: silenced on stop
+  src.start(t);
+}
+function clickTick(t, accent){
+  const o = ctx.createOscillator(); o.type = 'square';
+  o.frequency.value = accent ? 1250 : 850;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(accent ? 0.5 : 0.32, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  o.connect(g); g.connect(playBus);
+  o.start(t); o.stop(t + 0.07);
+}
+
+/* ---------------- beat clock + scheduler ---------------- */
+function secPerBeat(){ return 60 / ((+$('setBpm').value || song.origBpm) * pct / 100); }
+function vAt(t){ return V0 + (t - T0) / spb; }
+function timeOfV(v){ return T0 + (v - V0) * spb; }
+function foldV(v){
+  if(!loopOn || loopB - loopA < 0.5 || v < loopA) return v;
+  return loopA + ((v - loopA) % (loopB - loopA));
+}
+function lowerBound(arr, b){
+  let lo = 0, hi = arr.length;
+  while(lo < hi){ const m = (lo + hi) >> 1; if(arr[m].b < b - 1e-9) lo = m + 1; else hi = m; }
+  return lo;
+}
+function scheduleSegment(songA, songB, vBase){
+  // lead notes
+  let i = lowerBound(notes, songA);
+  while(i < notes.length && notes[i].b < songB - 1e-9){
+    const n = notes[i];
+    pluck(timeOfV(vBase + (n.b - songA)), n, spb);
+    i++;
+  }
+  // backing grid on eighths
+  if(backing !== 'off'){
+    let g = Math.ceil((songA - 1e-9) / 0.5) * 0.5;
+    for(; g < songB - 1e-9; g += 0.5){
+      const t = timeOfV(vBase + (g - songA));
+      const inBar = ((g % 4) + 4) % 4;
+      if(backing === 'drums'){
+        if(inBar === 0 || inBar === 2) hitDrum('kick', t, 1.0);
+        if(inBar === 1 || inBar === 3) hitDrum('snare', t, 0.95);
+        hitDrum('hat', t, 0.7);
+      }else if(Number.isInteger(inBar)){
+        clickTick(t, inBar === 0);
+      }
+    }
+  }
+}
+function schedulerTick(myToken){
+  if(myToken !== token || !playing) return;
+  const horizon = vAt(ctx.currentTime + LOOKAHEAD);
+  while(schedV < horizon){
+    const s = foldV(schedV);
+    let end = horizon;
+    if(loopOn && loopB - loopA >= 0.5 && schedV >= loopA - 1e-9){
+      end = Math.min(end, schedV + (loopB - s));
+    }
+    if(end <= schedV + 1e-9){ schedV += 0.001; continue; }
+    scheduleSegment(s, s + (end - schedV), schedV);
+    const wrapped = loopOn && loopB - loopA >= 0.5 &&
+        foldV(end) < foldV(schedV + 1e-9) - 1e-6;
+    schedV = end;
+    if(wrapped){
+      loopCount++;
+      if(trainerOn){
+        const N = Math.max(1, +$('trainN').value || 4);
+        if(loopCount % N === 0 && pct < 110) setPct(pct + 1, true);
+      }
+    }
+  }
+}
+
+/* ---------------- transport ---------------- */
+function startPlayback(fromBeat){
+  ensureCtx();
+  const myToken = ++token;
+  const go = () => {
+    if(myToken !== token) return;   // cancelled during resume/prep
+    warmup();
+    playBus = ctx.createGain(); playBus.connect(leadGain);
+    playBus._back = ctx.createGain(); // backing shares bus semantics
+    applyVols();
+    const headroom = warmed ? 0.12 : 0.30;
+    warmed = true;
+    spb = secPerBeat();
+    T0 = ctx.currentTime + headroom;
+    V0 = fromBeat; schedV = fromBeat;
+    playing = true;
+    $('btnPlay').textContent = '⏸ Pause';
+    schedulerTick(myToken);
+    schedTimer = setInterval(() => schedulerTick(myToken), TICK);
+  };
+  if(ctx.state === 'suspended') ctx.resume().then(go).catch(go);
+  else go();
+}
+function killVoices(){
+  if(schedTimer){ clearInterval(schedTimer); schedTimer = null; }
+  if(playBus && ctx){
+    playBus.gain.setValueAtTime(0, ctx.currentTime); // instant silence
+    const pb = playBus;
+    setTimeout(() => { try{ pb.disconnect(); }catch(e){} }, 60);
+  }
+  playBus = null;
+}
+function pause(){
+  if(!playing) return;
+  curBeat = foldV(vAt(ctx.currentTime));
+  ++token; playing = false;
+  killVoices();
+  $('btnPlay').textContent = '▶︎ Play';
+}
+function stop(){
+  ++token;
+  if(playing && ctx) curBeat = loopOn ? loopA : 0;
+  else curBeat = loopOn ? loopA : 0;
+  playing = false;
+  killVoices();
+  $('btnPlay').textContent = '▶︎ Play';
+  draw();
+}
+function togglePlay(){
+  if(playing) pause();
+  else {
+    let b = curBeat;
+    if(loopOn && (b < loopA - 8 || b >= loopB)) b = loopA;
+    startPlayback(b);
+  }
+}
+function seek(beat){
+  beat = Math.max(0, Math.min(totalBeats, beat));
+  const wasPlaying = playing;
+  if(playing){ ++token; killVoices(); playing = false; }
+  curBeat = beat;
+  if(wasPlaying) startPlayback(beat);
+  draw();
+}
+function setPct(p, silent){
+  pct = Math.max(30, Math.min(110, Math.round(p)));
+  $('tempo').value = pct;
+  $('pctBig').textContent = pct + '%';
+  const bpm = (+$('setBpm').value || song.origBpm) * pct / 100;
+  $('bpmSmall').textContent = bpm.toFixed(1) + ' bpm';
+  if(playing && ctx){
+    const now = ctx.currentTime;
+    V0 = vAt(now); T0 = now; spb = secPerBeat();
+  }
+  if(!silent) saveState();
+}
+
+/* ---------------- loop controls ---------------- */
+function setLoop(a, b, on){
+  loopA = Math.max(0, a); loopB = Math.min(totalBeats, b);
+  loopOn = on == null ? true : on;
+  updateLoopUI(); saveState(); draw();
+}
+function clearLoop(){ loopOn = false; loopA = loopB = 0; updateLoopUI(); saveState(); draw(); }
+function updateLoopUI(){
+  $('btnLoop').classList.toggle('on', loopOn);
+  if(loopOn && loopB > loopA){
+    const bo = song.barOffset;
+    const b1 = (loopA / 4 + 1 + bo), bars = (loopB - loopA) / 4;
+    const fmt = (x) => (Math.abs(x - Math.round(x)) < 0.005 ? Math.round(x) : x.toFixed(2));
+    $('loopInfo').textContent = '🔁 bar ' + fmt(b1) + ' · ' +
+        fmt(bars) + ' bar' + (bars !== 1 ? 's' : '') + ' · loops: ' + loopCount;
+  } else $('loopInfo').textContent = '';
+}
+function shiftLoop(d){ if(loopOn){ setLoop(loopA + d, loopB + d); } }
+function resizeLoop(d){ if(loopOn && loopB + d > loopA + 1){ setLoop(loopA, loopB + d); } }
+
+/* ---------------- canvas ---------------- */
+const lane = $('lane');
+let laneCtx = lane.getContext('2d');
+let staticCanvas = null, dpr = 1, W = 0, H = 0;
+function renderStatic(){
+  dpr = window.devicePixelRatio || 1;
+  W = lane.clientWidth; H = lane.clientHeight;
+  lane.width = W * dpr; lane.height = H * dpr;
+  staticCanvas = document.createElement('canvas');
+  staticCanvas.width = W * dpr; staticCanvas.height = H * dpr;
+  const c = staticCanvas.getContext('2d');
+  c.scale(dpr, dpr);
+  const css = getComputedStyle(document.body);
+  const grid = css.getPropertyValue('--grid').trim();
+  const fg = css.getPropertyValue('--fg').trim();
+  const accent = css.getPropertyValue('--accent').trim();
+  const dim = css.getPropertyValue('--dim').trim();
+  const stripH = 16, laneH = H - stripH;
+  let minP = 127, maxP = 0;
+  for(const n of notes){ minP = Math.min(minP, n.p); maxP = Math.max(maxP, n.p); }
+  minP -= 2; maxP += 2;
+  const x = (b) => b / totalBeats * W;
+  const y = (p) => laneH - (p - minP) / (maxP - minP) * (laneH - 8) - 4;
+  for(let b = 0; b <= totalBeats; b += 2){
+    c.strokeStyle = grid;
+    c.lineWidth = (b % 4 === 0) ? 1.5 : 0.5;
+    c.beginPath(); c.moveTo(x(b), 0); c.lineTo(x(b), laneH); c.stroke();
+  }
+  c.font = '9px ui-monospace, Menlo, monospace';
+  c.fillStyle = dim; c.textAlign = 'left';
+  const barStep = totalBeats / 4 > 20 ? 2 : 1;
+  for(let bar = 0; bar < totalBeats / 4; bar += barStep){
+    c.fillText(String(bar + 1 + song.barOffset), x(bar * 4) + 2, H - 4);
+  }
+  const noteH = Math.max(3, laneH / (maxP - minP) * 0.9);
+  for(const n of notes){
+    c.fillStyle = n.bd ? accent : fg;
+    c.fillRect(x(n.b), y(n.p) - noteH / 2,
+               Math.max(2, n.d / totalBeats * W), noteH);
+  }
+}
+function draw(){
+  if(!staticCanvas) return;
+  laneCtx.setTransform(1, 0, 0, 1, 0, 0);
+  laneCtx.drawImage(staticCanvas, 0, 0);
+  laneCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const stripH = 16, laneH = H - stripH;
+  const x = (b) => b / totalBeats * W;
+  if(loopOn && loopB > loopA){
+    const css = getComputedStyle(document.body);
+    laneCtx.fillStyle = css.getPropertyValue('--accent').trim();
+    laneCtx.globalAlpha = 0.14;
+    laneCtx.fillRect(x(loopA), 0, x(loopB) - x(loopA), laneH);
+    laneCtx.globalAlpha = 1;
+    laneCtx.fillRect(x(loopA), 0, 2, laneH);
+    laneCtx.fillRect(x(loopB) - 2, 0, 2, laneH);
+  }
+  const b = playing && ctx ? foldV(vAt(ctx.currentTime)) : curBeat;
+  laneCtx.fillStyle = '#ffffff';
+  laneCtx.globalAlpha = 0.9;
+  laneCtx.fillRect(x(Math.min(b, totalBeats)), 0, 2, laneH);
+  laneCtx.globalAlpha = 1;
+}
+function rafLoop(){
+  if(playing){
+    draw();
+    if(!loopOn && ctx && vAt(ctx.currentTime) >= totalBeats + 2) stop();
+    if(loopOn) updateLoopUI();
+  }
+  requestAnimationFrame(rafLoop);
+}
+
+/* lane pointer: drag = set loop (snap half-bar), tap = seek */
+let pDown = null, pDrag = false;
+lane.addEventListener('pointerdown', (e) => {
+  const r = lane.getBoundingClientRect();
+  pDown = { x: e.clientX, beat: (e.clientX - r.left) / r.width * totalBeats };
+  pDrag = false;
+  lane.setPointerCapture(e.pointerId);
+});
+lane.addEventListener('pointermove', (e) => {
+  if(!pDown) return;
+  if(Math.abs(e.clientX - pDown.x) > 8) pDrag = true;
+  if(pDrag){
+    const r = lane.getBoundingClientRect();
+    const b2 = (e.clientX - r.left) / r.width * totalBeats;
+    const a = Math.floor(Math.min(pDown.beat, b2) / 2) * 2;
+    const b = Math.ceil(Math.max(pDown.beat, b2) / 2) * 2;
+    if(b > a) setLoop(a, b, true);
+  }
+});
+lane.addEventListener('pointerup', (e) => {
+  if(pDown && !pDrag){
+    seek(Math.round(pDown.beat / 2) * 2); // tap: seek, snapped to half-bar
+  }
+  pDown = null; pDrag = false;
+});
+
+/* ---------------- songs + sections UI ---------------- */
+function fmtBar(beat){
+  const v = beat / 4 + 1 + song.barOffset;
+  return Math.abs(v - Math.round(v)) < 0.005 ? String(Math.round(v)) : v.toFixed(2);
+}
+function loadSong(idx){
+  stop();
+  song = DATA.songs[idx];
+  notes = song.notes;
+  totalBeats = song.totalBars * 4;
+  document.body.dataset.theme = song.theme;
+  $('title').textContent = song.emoji + ' ' + song.name;
+  const hz = song.hardest;
+  $('diffline').textContent = hz.emoji + ' hardest ≈16ths @ ' + hz.eq16 +
+      ' bpm (bar ' + fmtBar(hz.a) + ')';
+  loadState();
+  loopCount = 0;
+  curBeat = loopOn ? loopA : 0;
+  setPct(pct, true);
+  for(const b of document.querySelectorAll('[data-back]'))
+    b.classList.toggle('on', b.dataset.back === backing);
+  const secWrap = $('sections');
+  secWrap.innerHTML = '';
+  const mk = (label, a, b, extra) => {
+    const btn = document.createElement('button');
+    btn.innerHTML = label + '<span class="sub">bar ' + fmtBar(a) + ' → ' +
+        Math.ceil(b / 4 + song.barOffset) + ' · ' + ((b - a) / 4) + ' bars' +
+        (extra || '') + '</span>';
+    btn.onclick = () => { setLoop(a, b, true); loopCount = 0; seek(a); };
+    secWrap.appendChild(btn);
+  };
+  mk('⚡ Hardest', hz.a, hz.b, ' · ≈' + hz.eq16);
+  for(const s of song.sections) mk(s.name, s.a, s.b);
+  renderStatic(); updateLoopUI(); draw();
+  saveState();
+}
+
+/* ---------------- wiring ---------------- */
+const sel = $('songSel');
+DATA.songs.forEach((s, i) => {
+  const o = document.createElement('option');
+  o.value = i; o.textContent = s.emoji + ' ' + s.name;
+  sel.appendChild(o);
+});
+sel.onchange = () => loadSong(+sel.value);
+
+$('btnPlay').onclick = togglePlay;
+$('btnStop').onclick = stop;
+$('btnLoop').onclick = () => {
+  if(loopOn) { loopOn = false; }
+  else {
+    if(loopB <= loopA){ loopA = 0; loopB = totalBeats; }
+    loopOn = true; loopCount = 0;
+  }
+  updateLoopUI(); saveState(); draw();
+};
+$('btnClear').onclick = clearLoop;
+$('nShiftL').onclick = () => shiftLoop(-2);
+$('nShiftR').onclick = () => shiftLoop(2);
+$('nSizeD').onclick = () => resizeLoop(-2);
+$('nSizeU').onclick = () => resizeLoop(2);
+$('tempo').oninput = () => setPct(+$('tempo').value);
+for(const b of document.querySelectorAll('.presets button'))
+  b.onclick = () => setPct(+b.dataset.pct);
+$('btnTrainer').onclick = () => {
+  trainerOn = !trainerOn; loopCount = 0;
+  $('btnTrainer').classList.toggle('on', trainerOn);
+};
+for(const b of document.querySelectorAll('[data-back]'))
+  b.onclick = () => {
+    backing = b.dataset.back;
+    for(const x of document.querySelectorAll('[data-back]'))
+      x.classList.toggle('on', x === b);
+    saveState();
+  };
+for(const id of ['setBpm','setBend','setLead','setBack','trainN'])
+  $(id).onchange = () => { applyVols(); setPct(pct); saveState(); };
+
+document.addEventListener('keydown', (e) => {
+  if(e.target.tagName === 'INPUT') return;
+  if(e.code === 'Space'){ e.preventDefault(); togglePlay(); }
+  else if(e.key === 'ArrowLeft') shiftLoop(-2);
+  else if(e.key === 'ArrowRight') shiftLoop(2);
+  else if(e.key === '-' || e.key === '_') resizeLoop(-2);
+  else if(e.key === '+' || e.key === '=') resizeLoop(2);
+  else if(e.key === 'Escape') clearLoop();
+});
+
+/* iOS suspends AudioContext on app switch: revive on return */
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && ctx && ctx.state === 'suspended'){
+    ctx.resume().then(() => warmup()).catch(() => {});
+  }
+});
+window.addEventListener('resize', () => { renderStatic(); draw(); });
+
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+loadSong(0);
+rafLoop();
+</script>
+</body>
+</html>
