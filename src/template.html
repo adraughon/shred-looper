@@ -12,15 +12,18 @@
 <style>
 :root{
   --bg:#0e0f12; --card:#16181d; --card2:#1e2128; --fg:#f5f6f8; --dim:#8b8f98;
-  --accent:#e6b93c; --line:#272a31; --shadow:0 10px 30px rgba(0,0,0,.35);
+  --accent:#e6b93c; --line:#272a31; --loop:#5a8de0; --playhead:#3ddc84;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
 }
 body[data-theme="rhoads"]{
   --bg:#0a0a0c; --card:#131316; --card2:#1b1b20; --fg:#ffffff; --dim:#94949c;
-  --accent:#e23b3b; --line:#232327; --shadow:0 10px 30px rgba(0,0,0,.45);
+  --accent:#e23b3b; --line:#232327; --loop:#4a86e8; --playhead:#3ddc84;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
 }
 body[data-theme="dolphin"]{
   --bg:#f4e6c0; --card:#fffaf0; --card2:#fdf3dd; --fg:#0b6b6b; --dim:#559089;
-  --accent:#00a8c6; --line:#e8d9b4; --shadow:0 10px 24px rgba(160,120,40,.18);
+  --accent:#00a8c6; --line:#e8d9b4; --loop:#e85fa8; --playhead:#f07f2e;
+  --shadow:0 10px 24px rgba(160,120,40,.18);
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0; padding:0;}
@@ -105,16 +108,16 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
 
 <div class="card">
   <div class="row">
-    <button id="btnPlay">▶︎ Play</button>
-    <button id="btnStop" title="Stop">⏹</button>
-    <button id="btnLoop" title="Loop">🔁</button>
-    <button id="btnClear" title="Clear loop">✕</button>
+    <button id="btnPlay">Play</button>
+    <button id="btnStop">Stop</button>
+    <button id="btnLoop">Loop</button>
+    <button id="btnClear">Clear</button>
   </div>
   <div class="row nudge">
-    <button id="nShiftL">◀︎ ½</button>
-    <button id="nShiftR">½ ▶︎</button>
-    <button id="nSizeD">−½</button>
-    <button id="nSizeU">+½</button>
+    <button id="nShiftL">−½ shift</button>
+    <button id="nShiftR">+½ shift</button>
+    <button id="nSizeD">−½ len</button>
+    <button id="nSizeU">+½ len</button>
   </div>
 </div>
 
@@ -133,7 +136,7 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
     <button data-pct="105">105</button><button data-pct="110">110</button>
   </div>
   <div class="trainer">
-    <button id="btnTrainer">🏃 Trainer</button>
+    <button id="btnTrainer">Trainer</button>
     <span>+1% every</span><input type="number" id="trainN" value="4" min="1" max="99">
     <span>loops</span>
   </div>
@@ -354,7 +357,7 @@ function startPlayback(fromBeat){
     T0 = ctx.currentTime + headroom;
     V0 = fromBeat; schedV = fromBeat;
     playing = true;
-    $('btnPlay').textContent = '⏸ Pause';
+    $('btnPlay').textContent = 'Pause';
     schedulerTick(myToken);
     schedTimer = setInterval(() => schedulerTick(myToken), TICK);
   };
@@ -375,14 +378,14 @@ function pause(){
   curBeat = foldV(vAt(ctx.currentTime));
   ++token; playing = false;
   killVoices();
-  $('btnPlay').textContent = '▶︎ Play';
+  $('btnPlay').textContent = 'Play';
 }
 function stop(){
   ++token;
   curBeat = loopOn ? loopA : 0;
   playing = false;
   killVoices();
-  $('btnPlay').textContent = '▶︎ Play';
+  $('btnPlay').textContent = 'Play';
   draw();
 }
 function togglePlay(){
@@ -427,7 +430,7 @@ function updateLoopUI(){
     const bo = song.barOffset;
     const b1 = (loopA / 4 + 1 + bo), bars = (loopB - loopA) / 4;
     const fmt = (x) => (Math.abs(x - Math.round(x)) < 0.005 ? Math.round(x) : x.toFixed(2));
-    $('loopInfo').textContent = '🔁 bar ' + fmt(b1) + ' · ' +
+    $('loopInfo').textContent = 'bar ' + fmt(b1) + ' · ' +
         fmt(bars) + ' bar' + (bars !== 1 ? 's' : '') + ' · loops: ' + loopCount;
   } else $('loopInfo').textContent = '';
 }
@@ -453,7 +456,8 @@ function renderStatic(){
     fg: css.getPropertyValue('--fg').trim(),
     accent: css.getPropertyValue('--accent').trim(),
     dim: css.getPropertyValue('--dim').trim(),
-    bg: css.getPropertyValue('--bg').trim(),
+    loop: css.getPropertyValue('--loop').trim(),
+    playhead: css.getPropertyValue('--playhead').trim(),
   };
   const stripH = 16, laneH = H - stripH;
   let minP = 127, maxP = 0;
@@ -494,26 +498,24 @@ function draw(){
   const stripH = 16, laneH = H - stripH;
   const x = (b) => b / totalBeats * W;
   if(loopOn && loopB > loopA){
-    // dim outside the loop; loop region stays natural
-    laneCtx.fillStyle = themeCols.bg;
-    laneCtx.globalAlpha = 0.62;
-    laneCtx.fillRect(0, 0, x(loopA), laneH);
-    laneCtx.fillRect(x(loopB), 0, W - x(loopB), laneH);
-    laneCtx.globalAlpha = 0.85;
-    laneCtx.fillStyle = themeCols.fg;
+    // dedicated loop color: distinct from notes, bends, bg, playhead
+    laneCtx.fillStyle = themeCols.loop;
+    laneCtx.globalAlpha = 0.16;
+    laneCtx.fillRect(x(loopA), 0, x(loopB) - x(loopA), laneH);
+    laneCtx.globalAlpha = 0.9;
     laneCtx.fillRect(x(loopA), 0, 1.5, laneH);
     laneCtx.fillRect(x(loopB) - 1.5, 0, 1.5, laneH);
     laneCtx.globalAlpha = 1;
   }
   const b = playing && ctx ? foldV(vAt(ctx.currentTime)) : curBeat;
-  laneCtx.fillStyle = themeCols.fg;   // theme-aware: never white-on-white
-  laneCtx.globalAlpha = 0.9;
+  laneCtx.fillStyle = themeCols.playhead; // dedicated playhead color
+  laneCtx.globalAlpha = 0.95;
   laneCtx.fillRect(x(Math.min(b, totalBeats)), 0, 2, laneH);
   laneCtx.globalAlpha = 1;
 }
 function rafLoop(){
+  draw();  // always: no stale overlays after loop toggle/clear
   if(playing){
-    draw();
     if(!loopOn && ctx && vAt(ctx.currentTime) >= totalBeats + 2) stop();
     if(loopOn) updateLoopUI();
   }
@@ -561,7 +563,7 @@ function loadSong(idx){
   const hz = song.hardest;
   const tag = hz.eq16 < 120 ? 'easy' : hz.eq16 < 160 ? 'medium'
             : hz.eq16 < 180 ? 'hard' : 'really hard';
-  $('diffline').textContent = hz.emoji + ' ' + tag + ' (' + hz.eq16 + 'e)';
+  $('diffline').textContent = tag + ' (' + hz.eq16 + 'e)';
   loadState();
   loopCount = 0;
   curBeat = loopOn ? loopA : 0;
@@ -578,7 +580,7 @@ function loadSong(idx){
     btn.onclick = () => { setLoop(a, b, true); loopCount = 0; seek(a); };
     secWrap.appendChild(btn);
   };
-  mk('⚡ Hardest', hz.a, hz.b, ' · ≈' + hz.eq16);
+  mk('Hardest', hz.a, hz.b, ' · ≈' + hz.eq16);
   for(const s of song.sections) mk(s.name, s.a, s.b);
   renderStatic(); updateLoopUI(); draw();
   saveState();
