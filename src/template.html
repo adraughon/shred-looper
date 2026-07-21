@@ -485,6 +485,7 @@ function renderStatic(){
 function draw(){
   if(!staticCanvas) return;
   laneCtx.setTransform(1, 0, 0, 1, 0, 0);
+  laneCtx.clearRect(0, 0, lane.width, lane.height); // static layer is transparent: must wipe
   laneCtx.drawImage(staticCanvas, 0, 0);
   laneCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const stripH = 16, laneH = H - stripH;
