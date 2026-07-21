@@ -103,11 +103,13 @@ def _score(onsets, i, j, tempo):
         return 0.0
     return tempo * 0.25 / (span / (n - 1))
 
-def hardest_window(notes, tempo, exclude_before_beat=0.0):
+def hardest_window(notes, tempo, exclude_before_beat=0.0, exclude_ranges=()):
     onsets = sorted(set(round(n['b'], 6) for n in notes))
     best = None
     for i in range(len(onsets)):
         if onsets[i] < exclude_before_beat:
+            continue
+        if any(a <= onsets[i] < b for a, b in exclude_ranges):
             continue
         j = None
         for k in range(i + 1, len(onsets)):
@@ -239,7 +241,8 @@ def main():
 
     # ---- The World (Austin's own arrangement; labels from bar 1) ----
     tw_bpm = 176.8  # user-stated base; export transport was left at 40bpm
-    tw_hard = hardest_window(tw_notes, tw_bpm)
+    # bars 14-16 chromatic run: feel, not technical -- excluded per Austin
+    tw_hard = hardest_window(tw_notes, tw_bpm, exclude_ranges=((52.0, 60.0),))
     tw_last = max(n['b'] + n['d'] for n in tw_notes)
     tw = {
         'id': 'world', 'name': 'The World', 'emoji': '🎱', 'theme': 'world',
