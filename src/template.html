@@ -477,7 +477,7 @@ function renderStatic(){
   const noteH = Math.max(3, laneH / (maxP - minP) * 0.9);
   geom = { minP, maxP, noteH, laneH };
   for(const n of notes){
-    c.fillStyle = themeCols.fg;
+    c.fillStyle = themeCols.accent;   // notes lead with the theme's hot color
     c.fillRect(x(n.b), y(n.p) - noteH / 2,
                Math.max(2, n.d / totalBeats * W), noteH);
   }
@@ -492,7 +492,7 @@ function draw(){
   if(loopOn && loopB > loopA && geom){
     // loop indication: notes inside the loop take the secondary color
     const y = (p) => geom.laneH - (p - geom.minP) / (geom.maxP - geom.minP) * (geom.laneH - 8) - 4;
-    laneCtx.fillStyle = themeCols.accent;
+    laneCtx.fillStyle = themeCols.fg;
     let i = lowerBound(notes, loopA);
     while(i < notes.length && notes[i].b < loopB - 1e-9){
       const n = notes[i];
