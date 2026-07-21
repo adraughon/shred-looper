@@ -35,7 +35,7 @@ body[data-theme="dolphin"]{
 body[data-theme="world"]{
   /* dark wood + billiard ball colors */
   --bg:#20140c; --card:#2a1b10; --card2:#342214; --fg:#f3ead8; --dim:#a8916f;
-  --accent:#f2b632; --line:#3e2a18;
+  --accent:#3fae6a; --line:#3e2a18;
   --shadow:0 10px 30px rgba(0,0,0,.55);
   --band:radial-gradient(circle at 10px 5px, #f2b632 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
          radial-gradient(circle at 25px 5px, #d64541 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
@@ -525,13 +525,13 @@ function draw(){
   const b = playing && ctx ? foldV(vAt(ctx.currentTime)) : curBeat;
   laneCtx.fillStyle = themeCols.dim;  // neutral playhead
   laneCtx.globalAlpha = 0.95;
-  laneCtx.fillRect(x(Math.min(b, totalBeats)), 0, 2, laneH);
+  laneCtx.fillRect(Math.min(x(b), W - 2), 0, 2, laneH);
   laneCtx.globalAlpha = 1;
 }
 function rafLoop(){
   draw();  // always: no stale overlays after loop toggle/clear
   if(playing){
-    if(!loopOn && ctx && vAt(ctx.currentTime) >= totalBeats + 2) stop();
+    if(!loopOn && ctx && vAt(ctx.currentTime) >= totalBeats + 0.5) stop();
     if(loopOn) updateLoopUI();
   }
   requestAnimationFrame(rafLoop);
