@@ -129,9 +129,9 @@ def hardest_window(notes, tempo, exclude_before_beat=0.0):
     return {'a': a, 'b': b, 'eq16': round(sc)}
 
 def diff_emoji(eq16):
-    if eq16 < 115: return '🟢'      # easy
-    if eq16 < 145: return '🟡'      # medium
-    if eq16 < 175: return '🟠'      # hard
+    if eq16 < 120: return '🟢'      # easy
+    if eq16 < 160: return '🟡'      # medium
+    if eq16 < 180: return '🟠'      # hard
     return '🔴'                      # really hard
 
 # ------------------------------------------------------------------ drums

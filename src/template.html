@@ -5,75 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#111111">
+<meta name="theme-color" content="#0e0f12">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="__ICON192__">
 <title>Shred Looper</title>
 <style>
 :root{
-  --bg:#101010; --panel:#1a1a1a; --fg:#f2f2f2; --dim:#9a9a9a;
-  --accent:#e6b93c; --accent2:#e6b93c; --grid:#2c2c2c; --band:none;
+  --bg:#0e0f12; --card:#16181d; --card2:#1e2128; --fg:#f5f6f8; --dim:#8b8f98;
+  --accent:#e6b93c; --line:#272a31; --shadow:0 10px 30px rgba(0,0,0,.35);
 }
 body[data-theme="rhoads"]{
-  --bg:#0b0b0b; --panel:#181818; --fg:#ffffff; --dim:#8f8f8f;
-  --accent:#e03131; --accent2:#ff6b6b; --grid:#262626; --band:none;
+  --bg:#0a0a0c; --card:#131316; --card2:#1b1b20; --fg:#ffffff; --dim:#94949c;
+  --accent:#e23b3b; --line:#232327; --shadow:0 10px 30px rgba(0,0,0,.45);
 }
 body[data-theme="dolphin"]{
-  --bg:#f7e8c3; --panel:#fff7e2; --fg:#0a6e6e; --dim:#4d9c96;
-  --accent:#00b8d4; --accent2:#0090b0; --grid:#e4d3a8;
-  --band:radial-gradient(circle at 8% 50%, #bdeef7 0 6px, transparent 7px),
-        radial-gradient(circle at 26% 30%, #bdeef7 0 4px, transparent 5px),
-        radial-gradient(circle at 44% 60%, #bdeef7 0 7px, transparent 8px),
-        radial-gradient(circle at 63% 35%, #bdeef7 0 5px, transparent 6px),
-        radial-gradient(circle at 82% 55%, #bdeef7 0 6px, transparent 7px);
+  --bg:#f4e6c0; --card:#fffaf0; --card2:#fdf3dd; --fg:#0b6b6b; --dim:#559089;
+  --accent:#00a8c6; --line:#e8d9b4; --shadow:0 10px 24px rgba(160,120,40,.18);
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0; padding:0;}
 body{
   background:var(--bg); color:var(--fg);
-  font-family:"Archivo Black", ui-monospace, Menlo, monospace;
-  min-height:100vh; padding:env(safe-area-inset-top) 10px 24px;
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+  padding:calc(env(safe-area-inset-top) + 10px) 14px 44px;
+  max-width:560px; margin:0 auto;
   user-select:none; -webkit-user-select:none; touch-action:manipulation;
 }
-header{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; padding:10px 2px 6px;}
-h1{font-size:clamp(20px,6vw,28px); margin:0; line-height:1.1; letter-spacing:.5px;}
-#diffline{font-size:12px; color:var(--dim); margin-top:4px; font-family:ui-monospace,Menlo,monospace;}
+header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 2px 12px;}
+h1{
+  font-family:"Archivo Black", -apple-system, system-ui, sans-serif;
+  font-size:clamp(20px,6vw,26px); margin:0; line-height:1.15; letter-spacing:.3px;
+}
+#diffline{
+  display:inline-block; font-size:11px; font-weight:700; color:var(--dim);
+  border:1px solid var(--line); border-radius:999px; padding:3px 10px;
+  margin-top:5px; font-variant-numeric:tabular-nums; letter-spacing:.3px;
+}
 #songSel{
-  background:var(--panel); color:var(--fg); border:1px solid var(--grid);
-  border-radius:10px; font:inherit; font-size:14px; padding:10px 8px; min-height:44px;
+  background:var(--card2); color:var(--fg); border:1px solid var(--line);
+  border-radius:12px; font:inherit; font-size:14px; font-weight:600;
+  padding:10px 10px; min-height:46px; box-shadow:var(--shadow);
 }
-#band{height:14px; border-radius:7px; background:var(--band); margin:2px 0 8px;}
-#laneWrap{position:relative; width:100%;}
-canvas#lane{width:100%; height:40vh; max-height:380px; display:block;
-  background:var(--panel); border:1px solid var(--grid); border-radius:12px;}
-.row{display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:18px;
+  padding:14px; margin-top:14px; box-shadow:var(--shadow);
+}
+.card h3{margin:0 0 10px; font-size:11px; color:var(--dim); letter-spacing:1.4px; text-transform:uppercase; font-weight:700;}
+#laneCard{padding:10px;}
+canvas#lane{width:100%; height:38vh; max-height:360px; display:block;
+  background:var(--card2); border-radius:12px;}
+#loopInfo{font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums; min-height:16px; margin-top:8px; text-align:center;}
+.row{display:flex; gap:8px; align-items:center;}
+.row + .row{margin-top:8px;}
 button{
-  background:var(--panel); color:var(--fg); border:1px solid var(--grid);
-  border-radius:12px; font:inherit; font-size:15px; padding:0 14px;
-  min-height:48px; min-width:48px; cursor:pointer;
+  background:var(--card2); color:var(--fg); border:1px solid var(--line);
+  border-radius:13px; font:inherit; font-size:15px; font-weight:600;
+  padding:0 14px; min-height:48px; min-width:48px; cursor:pointer;
+  transition:transform .06s, opacity .15s;
 }
-button.primary{background:var(--accent); color:var(--bg); border-color:var(--accent); font-size:18px; flex:1;}
-button.on{outline:3px solid var(--accent);}
-button:active{transform:scale(.97);}
-#loopInfo{font-size:12px; color:var(--dim); font-family:ui-monospace,Menlo,monospace; min-height:16px; margin-top:6px;}
-.block{background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:10px; margin-top:12px;}
-.block h3{margin:0 0 8px; font-size:12px; color:var(--dim); letter-spacing:1px; text-transform:uppercase;}
+button:active{transform:scale(.965);}
+button.on{border-color:var(--accent); color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent);}
+#btnPlay{
+  flex:1; background:var(--fg); color:var(--bg); border-color:var(--fg);
+  font-size:17px; font-weight:800; min-height:54px; border-radius:15px;
+}
+.nudge button{flex:1; font-variant-numeric:tabular-nums;}
+#pctBig{font-size:38px; font-weight:800; text-align:center; font-variant-numeric:tabular-nums; letter-spacing:.5px;}
+#bpmSmall{font-size:12px; color:var(--dim); text-align:center; font-variant-numeric:tabular-nums; margin-bottom:4px;}
 input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
-#pctBig{font-size:34px; text-align:center;}
-#bpmSmall{font-size:12px; color:var(--dim); text-align:center; font-family:ui-monospace,Menlo,monospace;}
-.seg{display:flex; gap:6px;}
-.seg button{flex:1;}
-.presets button{flex:1; font-family:ui-monospace,Menlo,monospace;}
+.presets{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:8px;}
+.presets button{min-width:0; min-height:42px; padding:0; font-size:13px; font-variant-numeric:tabular-nums;}
+.seg{display:flex; background:var(--card2); border:1px solid var(--line); border-radius:13px; padding:4px; gap:4px;}
+.seg button{flex:1; border:none; background:transparent; min-height:42px;}
+.seg button.on{background:var(--fg); color:var(--bg); box-shadow:none; border-radius:10px;}
 #sections{display:flex; flex-wrap:wrap; gap:8px;}
-#sections button{font-size:13px; text-align:left; line-height:1.25; padding:8px 12px;}
-#sections .sub{display:block; font-size:10px; color:var(--dim); font-family:ui-monospace,Menlo,monospace; font-style:normal;}
-label.set{display:flex; justify-content:space-between; align-items:center; gap:10px; margin:8px 0; font-size:13px;}
-label.set input{width:90px; background:var(--bg); color:var(--fg); border:1px solid var(--grid);
-  border-radius:8px; font:inherit; font-size:15px; padding:8px; min-height:40px; text-align:right;}
-details summary{cursor:pointer; font-size:12px; color:var(--dim); letter-spacing:1px; text-transform:uppercase; min-height:44px; display:flex; align-items:center;}
-.trainer{display:flex; align-items:center; gap:10px; font-size:13px;}
-.trainer input{width:64px; background:var(--bg); color:var(--fg); border:1px solid var(--grid);
-  border-radius:8px; font:inherit; font-size:15px; padding:8px; min-height:40px; text-align:center;}
+#sections button{font-size:13px; text-align:left; line-height:1.3; padding:9px 13px;}
+#sections .sub{display:block; font-size:10.5px; color:var(--dim); font-weight:500; font-variant-numeric:tabular-nums; font-style:normal;}
+.trainer{display:flex; align-items:center; gap:10px; font-size:13px; margin-top:10px; color:var(--dim);}
+.trainer input{
+  background:var(--card2); color:var(--fg); border:1px solid var(--line);
+  border-radius:10px; font:inherit; font-size:15px; padding:8px; min-height:42px;
+  width:60px; text-align:center;
+}
 </style>
 </head>
 <body>
@@ -84,40 +97,49 @@ details summary{cursor:pointer; font-size:12px; color:var(--dim); letter-spacing
   </div>
   <select id="songSel"></select>
 </header>
-<div id="band"></div>
-<div id="laneWrap"><canvas id="lane"></canvas></div>
-<div id="loopInfo"></div>
 
-<div class="row">
-  <button id="btnPlay" class="primary">▶︎ Play</button>
-  <button id="btnStop">⏹</button>
-  <button id="btnLoop">🔁</button>
-  <button id="btnClear">✕</button>
-</div>
-<div class="row">
-  <button id="nShiftL">◀︎ ½</button>
-  <button id="nShiftR">½ ▶︎</button>
-  <button id="nSizeD">−½</button>
-  <button id="nSizeU">+½</button>
+<div class="card" id="laneCard">
+  <canvas id="lane"></canvas>
+  <div id="loopInfo"></div>
 </div>
 
-<div class="block">
+<div class="card">
+  <div class="row">
+    <button id="btnPlay">▶︎ Play</button>
+    <button id="btnStop" title="Stop">⏹</button>
+    <button id="btnLoop" title="Loop">🔁</button>
+    <button id="btnClear" title="Clear loop">✕</button>
+  </div>
+  <div class="row nudge">
+    <button id="nShiftL">◀︎ ½</button>
+    <button id="nShiftR">½ ▶︎</button>
+    <button id="nSizeD">−½</button>
+    <button id="nSizeU">+½</button>
+  </div>
+</div>
+
+<div class="card">
   <h3>Tempo</h3>
   <div id="pctBig">100%</div>
   <div id="bpmSmall"></div>
-  <input type="range" id="tempo" min="30" max="110" value="100" step="1">
-  <div class="row presets">
-    <button data-pct="50">50</button><button data-pct="70">70</button>
-    <button data-pct="85">85</button><button data-pct="100">100</button>
+  <input type="range" id="tempo" min="20" max="110" value="100" step="1">
+  <div class="presets">
+    <button data-pct="20">20</button><button data-pct="30">30</button>
+    <button data-pct="40">40</button><button data-pct="50">50</button>
+    <button data-pct="60">60</button><button data-pct="70">70</button>
+    <button data-pct="75">75</button><button data-pct="80">80</button>
+    <button data-pct="85">85</button><button data-pct="90">90</button>
+    <button data-pct="95">95</button><button data-pct="100">100</button>
+    <button data-pct="105">105</button><button data-pct="110">110</button>
   </div>
-  <div class="trainer" style="margin-top:8px">
+  <div class="trainer">
     <button id="btnTrainer">🏃 Trainer</button>
     <span>+1% every</span><input type="number" id="trainN" value="4" min="1" max="99">
     <span>loops</span>
   </div>
 </div>
 
-<div class="block">
+<div class="card">
   <h3>Backing</h3>
   <div class="seg">
     <button data-back="off">Off</button>
@@ -126,18 +148,10 @@ details summary{cursor:pointer; font-size:12px; color:var(--dim); letter-spacing
   </div>
 </div>
 
-<div class="block">
+<div class="card">
   <h3>Sections</h3>
   <div id="sections"></div>
 </div>
-
-<details class="block">
-  <summary>Setup</summary>
-  <label class="set">Original BPM <input type="number" id="setBpm" step="0.1"></label>
-  <label class="set">Bend scale <input type="number" id="setBend" step="0.1" value="1"></label>
-  <label class="set">Lead vol <input type="number" id="setLead" step="0.05" value="0.9"></label>
-  <label class="set">Backing vol <input type="number" id="setBack" step="0.05" value="0.8"></label>
-</details>
 
 <script>
 'use strict';
@@ -145,15 +159,15 @@ const DATA = "__DATA_JSON__";
 
 /* ---------------- state ---------------- */
 const LS = 'shredlooper.v1.';
-let song = null;            // current song object
-let notes = [];             // song.notes
+let song = null;
+let notes = [];
 let totalBeats = 0;
 let ctx = null, master = null, leadGain = null, backGain = null;
 let playBus = null;         // per-play gain: pause/stop silences instantly
-let drumBufs = {};          // decoded kick/snare/hat
+let drumBufs = {};
 let playing = false, warmed = false;
 let token = 0;              // intent token: bump cancels in-flight play/sched
-let V0 = 0, T0 = 0, spb = 0.5, schedV = 0, noteIdx = 0, gridV = 0;
+let V0 = 0, T0 = 0, spb = 0.5, schedV = 0;
 let curBeat = 0;
 let loopOn = false, loopA = 0, loopB = 0;
 let pct = 100, backing = 'drums';
@@ -162,14 +176,12 @@ let schedTimer = null;
 const LOOKAHEAD = 0.18, TICK = 30;
 
 const $ = (id) => document.getElementById(id);
+const BEND_SCALE = 1, LEAD_VOL = 0.9, BACK_VOL = 0.8;
 
 /* ---------------- persistence ---------------- */
 function saveState(){
   try{ localStorage.setItem(LS + song.id, JSON.stringify({
-    pct, loopOn, loopA, loopB, backing,
-    bendScale: +$('setBend').value, leadVol: +$('setLead').value,
-    backVol: +$('setBack').value, origBpm: +$('setBpm').value,
-    trainN: +$('trainN').value,
+    pct, loopOn, loopA, loopB, backing, trainN: +$('trainN').value,
   })); }catch(e){}
 }
 function loadState(){
@@ -178,10 +190,6 @@ function loadState(){
   pct = s && s.pct || 100;
   loopOn = !!(s && s.loopOn); loopA = s ? s.loopA : 0; loopB = s ? s.loopB : 0;
   backing = (s && s.backing) || 'drums';
-  $('setBend').value = s && s.bendScale != null ? s.bendScale : 1;
-  $('setLead').value = s && s.leadVol != null ? s.leadVol : 0.9;
-  $('setBack').value = s && s.backVol != null ? s.backVol : 0.8;
-  $('setBpm').value = s && s.origBpm ? s.origBpm : song.origBpm;
   $('trainN').value = s && s.trainN ? s.trainN : 4;
 }
 
@@ -205,15 +213,14 @@ function ensureCtx(){
   }
 }
 function warmup(){
-  // silent buffer: unlocks/primes mobile audio path
   const buf = ctx.createBuffer(1, 220, ctx.sampleRate);
   const src = ctx.createBufferSource();
   src.buffer = buf; src.connect(master); src.start();
 }
 function applyVols(){
   if(!ctx) return;
-  leadGain.gain.value = +$('setLead').value;
-  backGain.gain.value = +$('setBack').value;
+  leadGain.gain.value = LEAD_VOL;
+  backGain.gain.value = BACK_VOL;
 }
 
 /* pluck voice: dual detuned saws -> lowpass with envelope -> gain env */
@@ -224,8 +231,7 @@ function pluck(t, note, spbNow){
   const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
   o1.type = 'sawtooth'; o2.type = 'sawtooth';
   o1.detune.value = -7; o2.detune.value = 7;
-  const bendScale = +$('setBend').value || 1;
-  const semi2f = (s) => f0 * Math.pow(2, (s * bendScale) / 12);
+  const semi2f = (s) => f0 * Math.pow(2, (s * BEND_SCALE) / 12);
   let fStart = f0;
   if(note.bd && note.bd.length && note.bd[0][0] <= 1e-6) fStart = semi2f(note.bd[0][1]);
   o1.frequency.setValueAtTime(fStart, t);
@@ -260,21 +266,22 @@ function hitDrum(name, t, gain){
   if(!buf) return;
   const src = ctx.createBufferSource(); src.buffer = buf;
   const g = ctx.createGain(); g.gain.value = gain;
-  src.connect(g); g.connect(playBus); // through play bus: silenced on stop
+  src.connect(g); g.connect(playBus);
   src.start(t);
 }
 function clickTick(t, accent){
+  // lower + louder per feedback
   const o = ctx.createOscillator(); o.type = 'square';
-  o.frequency.value = accent ? 1250 : 850;
+  o.frequency.value = accent ? 660 : 440;
   const g = ctx.createGain();
-  g.gain.setValueAtTime(accent ? 0.5 : 0.32, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  g.gain.setValueAtTime(accent ? 0.95 : 0.75, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
   o.connect(g); g.connect(playBus);
-  o.start(t); o.stop(t + 0.07);
+  o.start(t); o.stop(t + 0.08);
 }
 
 /* ---------------- beat clock + scheduler ---------------- */
-function secPerBeat(){ return 60 / ((+$('setBpm').value || song.origBpm) * pct / 100); }
+function secPerBeat(){ return 60 / (song.origBpm * pct / 100); }
 function vAt(t){ return V0 + (t - T0) / spb; }
 function timeOfV(v){ return T0 + (v - V0) * spb; }
 function foldV(v){
@@ -287,14 +294,12 @@ function lowerBound(arr, b){
   return lo;
 }
 function scheduleSegment(songA, songB, vBase){
-  // lead notes
   let i = lowerBound(notes, songA);
   while(i < notes.length && notes[i].b < songB - 1e-9){
     const n = notes[i];
     pluck(timeOfV(vBase + (n.b - songA)), n, spb);
     i++;
   }
-  // backing grid on eighths
   if(backing !== 'off'){
     let g = Math.ceil((songA - 1e-9) / 0.5) * 0.5;
     for(; g < songB - 1e-9; g += 0.5){
@@ -339,10 +344,9 @@ function startPlayback(fromBeat){
   ensureCtx();
   const myToken = ++token;
   const go = () => {
-    if(myToken !== token) return;   // cancelled during resume/prep
+    if(myToken !== token) return;
     warmup();
     playBus = ctx.createGain(); playBus.connect(leadGain);
-    playBus._back = ctx.createGain(); // backing shares bus semantics
     applyVols();
     const headroom = warmed ? 0.12 : 0.30;
     warmed = true;
@@ -360,7 +364,7 @@ function startPlayback(fromBeat){
 function killVoices(){
   if(schedTimer){ clearInterval(schedTimer); schedTimer = null; }
   if(playBus && ctx){
-    playBus.gain.setValueAtTime(0, ctx.currentTime); // instant silence
+    playBus.gain.setValueAtTime(0, ctx.currentTime);
     const pb = playBus;
     setTimeout(() => { try{ pb.disconnect(); }catch(e){} }, 60);
   }
@@ -375,8 +379,7 @@ function pause(){
 }
 function stop(){
   ++token;
-  if(playing && ctx) curBeat = loopOn ? loopA : 0;
-  else curBeat = loopOn ? loopA : 0;
+  curBeat = loopOn ? loopA : 0;
   playing = false;
   killVoices();
   $('btnPlay').textContent = '▶︎ Play';
@@ -399,10 +402,10 @@ function seek(beat){
   draw();
 }
 function setPct(p, silent){
-  pct = Math.max(30, Math.min(110, Math.round(p)));
+  pct = Math.max(20, Math.min(110, Math.round(p)));
   $('tempo').value = pct;
   $('pctBig').textContent = pct + '%';
-  const bpm = (+$('setBpm').value || song.origBpm) * pct / 100;
+  const bpm = song.origBpm * pct / 100;
   $('bpmSmall').textContent = bpm.toFixed(1) + ' bpm';
   if(playing && ctx){
     const now = ctx.currentTime;
@@ -435,6 +438,7 @@ function resizeLoop(d){ if(loopOn && loopB + d > loopA + 1){ setLoop(loopA, loop
 const lane = $('lane');
 let laneCtx = lane.getContext('2d');
 let staticCanvas = null, dpr = 1, W = 0, H = 0;
+let themeCols = null;
 function renderStatic(){
   dpr = window.devicePixelRatio || 1;
   W = lane.clientWidth; H = lane.clientHeight;
@@ -444,10 +448,12 @@ function renderStatic(){
   const c = staticCanvas.getContext('2d');
   c.scale(dpr, dpr);
   const css = getComputedStyle(document.body);
-  const grid = css.getPropertyValue('--grid').trim();
-  const fg = css.getPropertyValue('--fg').trim();
-  const accent = css.getPropertyValue('--accent').trim();
-  const dim = css.getPropertyValue('--dim').trim();
+  themeCols = {
+    grid: css.getPropertyValue('--line').trim(),
+    fg: css.getPropertyValue('--fg').trim(),
+    accent: css.getPropertyValue('--accent').trim(),
+    dim: css.getPropertyValue('--dim').trim(),
+  };
   const stripH = 16, laneH = H - stripH;
   let minP = 127, maxP = 0;
   for(const n of notes){ minP = Math.min(minP, n.p); maxP = Math.max(maxP, n.p); }
@@ -455,22 +461,29 @@ function renderStatic(){
   const x = (b) => b / totalBeats * W;
   const y = (p) => laneH - (p - minP) / (maxP - minP) * (laneH - 8) - 4;
   for(let b = 0; b <= totalBeats; b += 2){
-    c.strokeStyle = grid;
+    c.strokeStyle = themeCols.grid;
     c.lineWidth = (b % 4 === 0) ? 1.5 : 0.5;
     c.beginPath(); c.moveTo(x(b), 0); c.lineTo(x(b), laneH); c.stroke();
   }
   c.font = '9px ui-monospace, Menlo, monospace';
-  c.fillStyle = dim; c.textAlign = 'left';
+  c.fillStyle = themeCols.dim; c.textAlign = 'left';
   const barStep = totalBeats / 4 > 20 ? 2 : 1;
   for(let bar = 0; bar < totalBeats / 4; bar += barStep){
     c.fillText(String(bar + 1 + song.barOffset), x(bar * 4) + 2, H - 4);
   }
   const noteH = Math.max(3, laneH / (maxP - minP) * 0.9);
   for(const n of notes){
-    c.fillStyle = n.bd ? accent : fg;
+    c.fillStyle = n.bd ? themeCols.accent : themeCols.fg;
     c.fillRect(x(n.b), y(n.p) - noteH / 2,
                Math.max(2, n.d / totalBeats * W), noteH);
   }
+  // legend: accent = bend
+  c.font = '9px -apple-system, system-ui, sans-serif';
+  c.textAlign = 'right';
+  c.fillStyle = themeCols.accent;
+  c.fillRect(W - 34, 7, 8, 4);
+  c.fillStyle = themeCols.dim;
+  c.fillText('bend', W - 6, 13);
 }
 function draw(){
   if(!staticCanvas) return;
@@ -480,16 +493,15 @@ function draw(){
   const stripH = 16, laneH = H - stripH;
   const x = (b) => b / totalBeats * W;
   if(loopOn && loopB > loopA){
-    const css = getComputedStyle(document.body);
-    laneCtx.fillStyle = css.getPropertyValue('--accent').trim();
-    laneCtx.globalAlpha = 0.14;
+    laneCtx.fillStyle = themeCols.accent;
+    laneCtx.globalAlpha = 0.13;
     laneCtx.fillRect(x(loopA), 0, x(loopB) - x(loopA), laneH);
     laneCtx.globalAlpha = 1;
     laneCtx.fillRect(x(loopA), 0, 2, laneH);
     laneCtx.fillRect(x(loopB) - 2, 0, 2, laneH);
   }
   const b = playing && ctx ? foldV(vAt(ctx.currentTime)) : curBeat;
-  laneCtx.fillStyle = '#ffffff';
+  laneCtx.fillStyle = themeCols.fg;   // theme-aware: never white-on-white
   laneCtx.globalAlpha = 0.9;
   laneCtx.fillRect(x(Math.min(b, totalBeats)), 0, 2, laneH);
   laneCtx.globalAlpha = 1;
@@ -524,7 +536,7 @@ lane.addEventListener('pointermove', (e) => {
 });
 lane.addEventListener('pointerup', (e) => {
   if(pDown && !pDrag){
-    seek(Math.round(pDown.beat / 2) * 2); // tap: seek, snapped to half-bar
+    seek(Math.round(pDown.beat / 2) * 2);
   }
   pDown = null; pDrag = false;
 });
@@ -542,8 +554,9 @@ function loadSong(idx){
   document.body.dataset.theme = song.theme;
   $('title').textContent = song.emoji + ' ' + song.name;
   const hz = song.hardest;
-  $('diffline').textContent = hz.emoji + ' hardest ≈16ths @ ' + hz.eq16 +
-      ' bpm (bar ' + fmtBar(hz.a) + ')';
+  const tag = hz.eq16 < 120 ? 'easy' : hz.eq16 < 160 ? 'medium'
+            : hz.eq16 < 180 ? 'hard' : 'really hard';
+  $('diffline').textContent = hz.emoji + ' ' + tag + ' (' + hz.eq16 + 'e)';
   loadState();
   loopCount = 0;
   curBeat = loopOn ? loopA : 0;
@@ -604,8 +617,7 @@ for(const b of document.querySelectorAll('[data-back]'))
       x.classList.toggle('on', x === b);
     saveState();
   };
-for(const id of ['setBpm','setBend','setLead','setBack','trainN'])
-  $(id).onchange = () => { applyVols(); setPct(pct); saveState(); };
+$('trainN').onchange = () => saveState();
 
 document.addEventListener('keydown', (e) => {
   if(e.target.tagName === 'INPUT') return;
