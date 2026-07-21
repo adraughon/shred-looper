@@ -35,7 +35,7 @@ body[data-theme="dolphin"]{
 body[data-theme="world"]{
   /* dark wood + billiard ball colors */
   --bg:#20140c; --card:#2a1b10; --card2:#342214; --fg:#f3ead8; --dim:#a8916f;
-  --accent:#3fae6a; --line:#3e2a18; --lane:#2f7a4d;
+  --accent:#3fae6a; --line:#3e2a18;
   --shadow:0 10px 30px rgba(0,0,0,.55);
   --band:radial-gradient(circle at 10px 5px, #f2b632 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
          radial-gradient(circle at 25px 5px, #d64541 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
@@ -75,7 +75,7 @@ h1{
 .card h3{margin:0 0 10px; font-size:11px; color:var(--dim); letter-spacing:1.4px; text-transform:uppercase; font-weight:700;}
 #laneCard{padding:10px;}
 canvas#lane{width:100%; height:38vh; max-height:360px; display:block;
-  background:var(--lane, var(--card2)); border-radius:12px;}
+  background:var(--card2); border-radius:12px;}
 #loopInfo{font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums; min-height:16px; margin-top:8px; text-align:center;}
 .row{display:flex; gap:8px; align-items:center;}
 .row + .row{margin-top:8px;}
@@ -483,24 +483,21 @@ function renderStatic(){
   minP -= 2; maxP += 2;
   const x = (b) => b / totalBeats * W;
   const y = (p) => laneH - (p - minP) / (maxP - minP) * (laneH - 8) - 4;
-  const isWorld = song.theme === 'world';
   for(let b = 0; b <= totalBeats; b += 2){
-    c.strokeStyle = isWorld ? 'rgba(0,0,0,.28)' : themeCols.grid;
+    c.strokeStyle = themeCols.grid;
     c.lineWidth = (b % 4 === 0) ? 1.5 : 0.5;
     c.beginPath(); c.moveTo(x(b), 0); c.lineTo(x(b), laneH); c.stroke();
   }
   c.font = '9px ui-monospace, Menlo, monospace';
-  c.fillStyle = isWorld ? 'rgba(255,255,255,.6)' : themeCols.dim; c.textAlign = 'left';
+  c.fillStyle = themeCols.dim; c.textAlign = 'left';
   const barStep = totalBeats / 4 > 20 ? 2 : 1;
   for(let bar = 0; bar < totalBeats / 4; bar += barStep){
     c.fillText(String(bar + 1 + song.barOffset), x(bar * 4) + 2, H - 4);
   }
   const noteH = Math.max(3, laneH / (maxP - minP) * 0.9);
   geom = { minP, maxP, noteH, laneH };
-  const balls = ['#e04f42', '#f2c14e', '#4a7fd4'];  // pool: reds, yellows, blues
-  let bi = 0;
   for(const n of notes){
-    c.fillStyle = isWorld ? balls[bi++ % balls.length] : themeCols.accent;
+    c.fillStyle = themeCols.accent;   // notes lead with the theme's hot color
     c.fillRect(x(n.b), y(n.p) - noteH / 2,
                Math.max(2, n.d / totalBeats * W), noteH);
   }
