@@ -187,10 +187,20 @@ def half_bar_len(a, b):
     """Exact start; length rounded UP to nearest half-bar (2 beats)."""
     return a + math.ceil((b - a) / 2.0 - 1e-9) * 2
 
+def midi_bpm(path):
+    m = mido.MidiFile(str(path))
+    for t in m.tracks:
+        for msg in t:
+            if msg.type == 'set_tempo':
+                return round(mido.tempo2bpm(msg.tempo), 1)
+    return 120.0
+
+
 def main():
     ct_notes = parse_song(SRC / 'midi' / 'CRAZY_TRAIN_MANUALLY.mid', 3)
     ds_notes = parse_song(SRC / 'midi' / 'dolphinshoalsmanual.mid', 2,
                           trim_before_beat=(18 - 1) * 4)
+    tw_notes = parse_song(SRC / 'midi' / 'THE_WORLD_bars110-135.mid', 0)
 
     # ---- Crazy Train ----
     ct_hard = hardest_window(ct_notes, 138.7,
@@ -227,7 +237,19 @@ def main():
         ],
     }
 
-    for song, hard in ((ct, ct_hard), (ds, ds_hard)):
+    # ---- The World (transcribed bars 110-135; labels read 110+) ----
+    tw_bpm = midi_bpm(SRC / 'midi' / 'THE_WORLD_bars110-135.mid')
+    tw_hard = hardest_window(tw_notes, tw_bpm)
+    tw_last = max(n['b'] + n['d'] for n in tw_notes)
+    tw = {
+        'id': 'world', 'name': 'The World', 'emoji': '🎱', 'theme': 'world',
+        'origBpm': tw_bpm, 'barOffset': 109,
+        'totalBars': int(math.ceil(tw_last / 4.0)),
+        'notes': tw_notes,
+        'sections': [],
+    }
+
+    for song, hard in ((ct, ct_hard), (ds, ds_hard), (tw, tw_hard)):
         a, b = hard['a'], hard['b']
         song['hardest'] = {
             'a': a, 'b': half_bar_len(a, b), 'eq16': hard['eq16'],
@@ -251,7 +273,7 @@ def main():
     icon192 = make_icon_png(192, '#111111', '#e6b93c')
     icon512 = make_icon_png(512, '#111111', '#e6b93c')
 
-    data = {'cacheVersion': cache_version, 'songs': [ct, ds], 'drums': drums}
+    data = {'cacheVersion': cache_version, 'songs': [ct, ds, tw], 'drums': drums}
 
     template = (SRC / 'template.html').read_text()
     html = (template
@@ -296,6 +318,7 @@ def main():
     print(f'built index.html {kb:.0f}KB  cache {cache_version}')
     print(f"  Crazy Train hardest: beat {ct_hard['a']} ~16ths@{ct_hard['eq16']}")
     print(f"  Dolphin hardest: beat {ds_hard['a']} ~16ths@{ds_hard['eq16']}")
+    print(f"  The World ({tw_bpm}bpm) hardest: beat {tw_hard['a']} ~16ths@{tw_hard['eq16']}")
 
 if __name__ == '__main__':
     main()
