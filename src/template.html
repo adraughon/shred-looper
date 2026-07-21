@@ -33,11 +33,15 @@ body[data-theme="dolphin"]{
          #7ec8e8;
 }
 body[data-theme="world"]{
-  --bg:#131110; --card:#1b1917; --card2:#25211a; --fg:#e9e2d2; --dim:#9a917f;
-  --accent:#57a86e; --line:#2d2822;
-  --shadow:0 10px 30px rgba(0,0,0,.5);
-  --band:radial-gradient(ellipse 16px 4px at 30% 60%, rgba(255,255,255,.10), transparent 70%) 0 0/52px 10px repeat-x,
-         linear-gradient(90deg, #24483a, #2e5847 50%, #24483a);
+  /* dark wood + billiard ball colors */
+  --bg:#20140c; --card:#2a1b10; --card2:#342214; --fg:#f3ead8; --dim:#a8916f;
+  --accent:#f2b632; --line:#3e2a18;
+  --shadow:0 10px 30px rgba(0,0,0,.55);
+  --band:radial-gradient(circle at 10px 5px, #f2b632 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
+         radial-gradient(circle at 25px 5px, #d64541 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
+         radial-gradient(circle at 40px 5px, #3b6bd6 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
+         radial-gradient(circle at 55px 5px, #8e44ad 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
+         #2a5c41;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0; padding:0;}
