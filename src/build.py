@@ -251,6 +251,15 @@ def main():
         'notes': tw_notes,
         'sections': [],
     }
+    # 2-bar groups, except the last 6 bars split as two 3-bar groups
+    tw_total = tw['totalBars']
+    two_bar_end = tw_total - 6
+    for b0 in range(0, two_bar_end, 2):
+        tw['sections'].append({'name': f'Bars {b0 + 1}-{b0 + 2}',
+                               'a': b0 * 4.0, 'b': (b0 + 2) * 4.0})
+    for b0 in (two_bar_end, two_bar_end + 3):
+        tw['sections'].append({'name': f'Bars {b0 + 1}-{b0 + 3}',
+                               'a': b0 * 4.0, 'b': (b0 + 3) * 4.0})
 
     for song, hard in ((ct, ct_hard), (ds, ds_hard), (tw, tw_hard)):
         a, b = hard['a'], hard['b']
