@@ -199,7 +199,8 @@ def midi_bpm(path):
 
 
 def main():
-    ct_notes = parse_song(SRC / 'midi' / 'CRAZY_TRAIN_MANUALLY.mid', 3)
+    ct_notes = parse_song(SRC / 'midi' / 'crazytrain_even_closer.mid', 3,
+                          trim_before_beat=12)  # drop 3 empty lead-in bars
     ds_notes = parse_song(SRC / 'midi' / 'dolphinshoalsmanual.mid', 2,
                           trim_before_beat=(18 - 1) * 4)
     tw_notes = parse_song(SRC / 'midi' / 'the_world.mid', 4,  # 'best combo' track
