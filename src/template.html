@@ -76,6 +76,7 @@ h1{
 #laneCard{padding:10px;}
 canvas#lane{width:100%; height:38vh; max-height:360px; display:block;
   background:var(--card2); border-radius:12px;}
+canvas#sectionsStrip{width:100%; display:block; margin-bottom:6px;}
 #loopInfo{font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums; min-height:16px; margin-top:8px; text-align:center;}
 #songMeta{font-size:10.5px; color:var(--dim); opacity:.65; font-variant-numeric:tabular-nums; text-align:center; margin-top:2px;}
 .row{display:flex; gap:8px; align-items:center;}
@@ -123,6 +124,7 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
 </header>
 
 <div class="card" id="laneCard">
+  <canvas id="sectionsStrip"></canvas>
   <canvas id="lane"></canvas>
   <div id="loopInfo"></div>
   <div id="songMeta"></div>
@@ -463,6 +465,57 @@ function updateLoopUI(){
 function shiftLoop(d){ if(loopOn){ setLoop(loopA + d, loopB + d); } }
 function resizeLoop(d){ if(loopOn && loopB + d > loopA + 1){ setLoop(loopA, loopB + d); } }
 
+/* ---------------- sections strip: hardest gets its own lane, rest packed non-overlapping ---------------- */
+const secStrip = $('sectionsStrip');
+let secCtx = secStrip.getContext('2d');
+let secHits = [];  // [{a,b,x0,x1,y0,y1}] in CSS px, for tap-to-loop
+const SEC_ROW_H = 9, SEC_GAP = 4;
+function packRows(items){
+  const rows = [];  // each row: last end beat
+  const placed = [];
+  for(const it of items.slice().sort((a, b) => a.a - b.a)){
+    let r = rows.findIndex((end) => it.a >= end - 1e-6);
+    if(r === -1){ r = rows.length; rows.push(0); }
+    rows[r] = it.b;
+    placed.push({ ...it, row: r });
+  }
+  return { placed, rowCount: Math.max(1, rows.length) };
+}
+function renderSectionsStrip(){
+  const dpr2 = window.devicePixelRatio || 1;
+  const others = song.sections;
+  const { placed, rowCount } = packRows(others);
+  const totalRows = 1 + rowCount;  // hardest lane + packed section lanes
+  const cssW = secStrip.clientWidth || lane.clientWidth;
+  const cssH = totalRows * SEC_ROW_H + (totalRows - 1) * SEC_GAP;
+  secStrip.style.height = cssH + 'px';
+  secStrip.width = cssW * dpr2; secStrip.height = cssH * dpr2;
+  secCtx.setTransform(dpr2, 0, 0, dpr2, 0, 0);
+  secCtx.clearRect(0, 0, cssW, cssH);
+  const x = (b) => b / totalBeats * cssW;
+  secHits = [];
+  const drawBar = (a, b, row, fill, alpha) => {
+    const y0 = row * (SEC_ROW_H + SEC_GAP);
+    const bx = x(a), bw = Math.max(3, x(b) - x(a));
+    secCtx.globalAlpha = alpha;
+    secCtx.fillStyle = fill;
+    secCtx.beginPath();
+    secCtx.roundRect(bx, y0, bw, SEC_ROW_H, 3);
+    secCtx.fill();
+    secCtx.globalAlpha = 1;
+    secHits.push({ a, b, x0: bx, x1: bx + bw, y0, y1: y0 + SEC_ROW_H });
+  };
+  const hz = song.hardest;
+  drawBar(hz.a, hz.b, 0, themeCols.accent, 0.55);
+  for(const it of placed) drawBar(it.a, it.b, 1 + it.row, themeCols.dim, 0.35);
+}
+secStrip.addEventListener('pointerup', (e) => {
+  const r = secStrip.getBoundingClientRect();
+  const px = e.clientX - r.left, py = e.clientY - r.top;
+  const hit = secHits.find((h) => px >= h.x0 && px <= h.x1 && py >= h.y0 && py <= h.y1);
+  if(hit){ setLoop(hit.a, hit.b, true); loopCount = 0; seek(hit.a); }
+});
+
 /* ---------------- canvas ---------------- */
 const lane = $('lane');
 let laneCtx = lane.getContext('2d');
@@ -603,7 +656,7 @@ function loadSong(idx){
   };
   mk('⚡ Hardest', hz.a, hz.b, ' · ≈' + hz.eq16);
   for(const s of song.sections) mk(s.name, s.a, s.b);
-  renderStatic(); updateLoopUI(); draw();
+  renderStatic(); renderSectionsStrip(); updateLoopUI(); draw();
   saveState();
 }
 
@@ -663,7 +716,7 @@ document.addEventListener('visibilitychange', () => {
     ctx.resume().then(() => warmup()).catch(() => {});
   }
 });
-window.addEventListener('resize', () => { renderStatic(); draw(); });
+window.addEventListener('resize', () => { renderStatic(); renderSectionsStrip(); draw(); });
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(() => {});

@@ -233,6 +233,7 @@ def main():
         'totalBars': int(math.ceil(ds_last / 4.0)),
         'notes': ds_notes,
         'sections': [
+            {'name': 'Intro', 'a': L(18), 'b': L(23)},
             {'name': 'Tricky Middle', 'a': L(27), 'b': half_bar_len(L(27), L(31))},
             {'name': 'Pre Run 1', 'a': pr1, 'b': half_bar_len(pr1, L(37))},
             {'name': 'Pre Run 2', 'a': pr2, 'b': half_bar_len(pr2, L(39))},
