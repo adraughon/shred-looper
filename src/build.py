@@ -202,7 +202,8 @@ def main():
     ct_notes = parse_song(SRC / 'midi' / 'CRAZY_TRAIN_MANUALLY.mid', 3)
     ds_notes = parse_song(SRC / 'midi' / 'dolphinshoalsmanual.mid', 2,
                           trim_before_beat=(18 - 1) * 4)
-    tw_notes = parse_song(SRC / 'midi' / 'the_world.mid', 4)  # 'best combo' track
+    tw_notes = parse_song(SRC / 'midi' / 'the_world.mid', 4,  # 'best combo' track
+                          trim_before_beat=4)  # drop empty first bar
 
     # ---- Crazy Train ----
     ct_hard = hardest_window(ct_notes, 138.7,
