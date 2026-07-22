@@ -434,7 +434,8 @@ function setPct(p, silent){
   $('bpmSmall').textContent = bpm.toFixed(1) + ' bpm';
   const secs = Math.round(totalBeats * 60 / bpm);
   $('songMeta').textContent = song.totalBars + ' bars · ' +
-      Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+      Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') +
+      ' · ' + notes.length + ' notes';   // every block: double stops count as 2
   if(playing && ctx){
     const now = ctx.currentTime;
     V0 = vAt(now); T0 = now; spb = secPerBeat();
