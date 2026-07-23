@@ -248,7 +248,7 @@ def main():
     tw_hard = hardest_window(tw_notes, tw_bpm, exclude_ranges=((52.0, 60.0),))
     tw_last = max(n['b'] + n['d'] for n in tw_notes)
     tw = {
-        'id': 'world', 'name': 'The World', 'emoji': '🎱', 'theme': 'world',
+        'id': 'world', 'name': 'The World', 'emoji': '🤠', 'theme': 'world',
         'origBpm': tw_bpm, 'barOffset': 0,
         'totalBars': int(math.ceil(tw_last / 4.0)),
         'notes': tw_notes,
