@@ -72,10 +72,38 @@ h1{
 #btnMap{min-width:48px; padding:0; font-size:20px;}
 .owHeader{padding:4px 2px 6px;}
 #owSubtitle{font-size:12px; color:var(--dim); margin-top:4px;}
-#owWrap{position:relative; margin-top:8px;}
+#owWrap{position:relative; margin-top:8px; overflow:hidden; border-radius:22px;}
 #owPath{position:absolute; top:0; left:0; pointer-events:none;}
-#owPath path{fill:none; stroke:var(--accent); stroke-width:5; stroke-linecap:round; stroke-dasharray:2 14; opacity:.85;}
-.owWorldLabel{position:absolute; left:0; right:0; text-align:center; font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:800; color:var(--dim); opacity:.75;}
+#owPath path{fill:none; stroke:var(--accent); stroke-width:5; stroke-linecap:round; stroke-dasharray:2 14; opacity:.9;}
+.owWorldLabel{position:absolute; left:0; right:0; text-align:center; font-size:12px; letter-spacing:2px; text-transform:uppercase; font-weight:800; color:var(--dim); opacity:.9; text-shadow:0 1px 3px rgba(0,0,0,.5);}
+.owWorldLabel.w1{color:#ffe9b3;}
+.owWorldLabel.w2{color:#a8ffc4;}
+.owWorldLabel.w3{color:#ffd23f;}
+.owWorldBg{position:absolute; left:0; right:0; pointer-events:none;}
+.owWorldBg.w1{
+  background:
+    radial-gradient(52px 26px at 20% 32%, #e8d9a0 0%, #e8d9a0 55%, transparent 70%),
+    radial-gradient(40px 20px at 76% 60%, #d8c98a 0%, #d8c98a 55%, transparent 70%),
+    radial-gradient(48px 24px at 46% 86%, #e8d9a0 0%, #e8d9a0 55%, transparent 70%),
+    repeating-linear-gradient(100deg, rgba(255,255,255,.07) 0 6px, transparent 6px 26px),
+    linear-gradient(180deg, #1b4f66 0%, #123a4f 100%);
+  border-top:2px solid rgba(255,233,179,.35); border-bottom:2px solid rgba(255,233,179,.35);
+}
+.owWorldBg.w2{
+  background:
+    repeating-linear-gradient(0deg, rgba(140,255,170,.14) 0 2px, transparent 2px 34px),
+    repeating-linear-gradient(90deg, rgba(140,255,170,.14) 0 2px, transparent 2px 34px),
+    radial-gradient(2.6px 2.6px at 17px 17px, rgba(140,255,170,.55) 99%, transparent 100%) 0 0/34px 34px,
+    linear-gradient(180deg, #0e2418 0%, #0a1a12 100%);
+  border-top:2px solid rgba(140,255,170,.4); border-bottom:2px solid rgba(140,255,170,.4);
+}
+.owWorldBg.w3{
+  background:
+    repeating-conic-gradient(rgba(255,255,255,.08) 0% 25%, transparent 0% 50%) 0 0/20px 20px,
+    linear-gradient(180deg, #2b2f35 0%, #17191d 100%);
+  border-top:5px solid; border-bottom:5px solid;
+  border-image:repeating-linear-gradient(90deg, #d81f26 0 14px, #f2f2f2 14px 28px) 5;
+}
 .owNode{position:absolute; width:96px; transform:translate(-50%,-50%); text-align:center; display:flex; flex-direction:column; align-items:center; gap:3px;}
 .owNode.unlocked{cursor:pointer;}
 .owBadge{position:absolute; top:-8px; left:50%; transform:translateX(-50%); background:var(--bg); color:var(--dim); font-size:9px; font-weight:800; padding:2px 7px; border-radius:999px; border:1px solid var(--line); letter-spacing:.4px; white-space:nowrap;}
@@ -712,20 +740,26 @@ const MAP_STAGES = [
   { label: '3-Boss', title: 'Eruption', sub: 'Eddie Van Halen', emoji: '🌋' },
 ];
 const owWrap = $('owWrap'), owPath = $('owPath');
+const WORLD_FLAIR = { 1: '🏝️', 2: '🔌', 3: '🏁' };
 function renderMap(){
-  owWrap.querySelectorAll('.owNode,.owWorldLabel').forEach((el) => el.remove());
+  owWrap.querySelectorAll('.owNode,.owWorldLabel,.owWorldBg').forEach((el) => el.remove());
   const width = owWrap.clientWidth || 320;
   const ROW_H = 108, AMPL = Math.min(86, width * 0.27);
   let y = 46, ni = 0;
   const pts = [];
+  const bands = [];
+  let curWorld = 0, bandStart = 0;
+  const closeBand = (endY) => { if(curWorld) bands.push({ w: curWorld, y0: bandStart, y1: endY }); };
   for(const st of MAP_STAGES){
     if(st.world != null){
+      closeBand(y - 16);
       const lab = document.createElement('div');
-      lab.className = 'owWorldLabel';
+      lab.className = 'owWorldLabel w' + st.world;
       lab.style.top = y + 'px';
-      lab.textContent = 'World ' + st.world;
+      lab.textContent = WORLD_FLAIR[st.world] + ' World ' + st.world;
       owWrap.appendChild(lab);
       y += 40;
+      curWorld = st.world; bandStart = y - 16;
       continue;
     }
     const song = st.songId ? DATA.songs.find((s) => s.id === st.songId) : null;
@@ -745,8 +779,16 @@ function renderMap(){
     pts.push({ x, y });
     y += ROW_H; ni++;
   }
+  closeBand(y - ROW_H + 62);
   const totalH = y - ROW_H + 70;
   owWrap.style.height = totalH + 'px';
+  for(const b of bands){
+    const bg = document.createElement('div');
+    bg.className = 'owWorldBg w' + b.w;
+    bg.style.top = b.y0 + 'px';
+    bg.style.height = (b.y1 - b.y0) + 'px';
+    owWrap.insertBefore(bg, owWrap.firstChild);
+  }
   owPath.setAttribute('width', width);
   owPath.setAttribute('height', totalH);
   let d = '';
