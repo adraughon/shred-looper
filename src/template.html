@@ -43,6 +43,12 @@ body[data-theme="world"]{
          radial-gradient(circle at 55px 5px, #8e44ad 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
          #2a5c41;
 }
+body[data-theme="map"]{
+  --bg:#0c1526; --card:#141f38; --card2:#1b2947; --fg:#eef1fa; --dim:#7c88a8;
+  --accent:#e6b93c; --line:#263352;
+  --shadow:0 10px 26px rgba(0,0,0,.4);
+  --band:repeating-linear-gradient(90deg, #1b2947 0 18px, #e6b93c 18px 22px);
+}
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0; padding:0;}
 body{
@@ -52,8 +58,8 @@ body{
   max-width:560px; margin:0 auto;
   user-select:none; -webkit-user-select:none; touch-action:manipulation;
 }
-#band{height:10px; border-radius:999px; margin:0 0 10px; background:var(--band);}
-header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 2px 12px;}
+#band, #owBand{height:10px; border-radius:999px; margin:0 0 10px; background:var(--band);}
+header{display:flex; align-items:center; justify-content:flex-start; gap:10px; padding:4px 2px 12px;}
 h1{
   font-family:"Archivo Black", -apple-system, system-ui, sans-serif;
   font-size:clamp(20px,6vw,26px); margin:0; line-height:1.15; letter-spacing:.3px;
@@ -63,11 +69,23 @@ h1{
   border:1px solid var(--line); border-radius:999px; padding:3px 10px;
   margin-top:5px; font-variant-numeric:tabular-nums; letter-spacing:.3px;
 }
-#songSel{
-  background:var(--card2); color:var(--fg); border:1px solid var(--line);
-  border-radius:12px; font:inherit; font-size:14px; font-weight:600;
-  padding:10px 10px; min-height:46px; box-shadow:var(--shadow);
-}
+#btnMap{min-width:48px; padding:0; font-size:20px;}
+.owHeader{padding:4px 2px 6px;}
+#owSubtitle{font-size:12px; color:var(--dim); margin-top:4px;}
+#owWrap{position:relative; margin-top:8px;}
+#owPath{position:absolute; top:0; left:0; pointer-events:none;}
+#owPath path{fill:none; stroke:var(--accent); stroke-width:5; stroke-linecap:round; stroke-dasharray:2 14; opacity:.85;}
+.owWorldLabel{position:absolute; left:0; right:0; text-align:center; font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:800; color:var(--dim); opacity:.75;}
+.owNode{position:absolute; width:96px; transform:translate(-50%,-50%); text-align:center; display:flex; flex-direction:column; align-items:center; gap:3px;}
+.owNode.unlocked{cursor:pointer;}
+.owBadge{position:absolute; top:-8px; left:50%; transform:translateX(-50%); background:var(--bg); color:var(--dim); font-size:9px; font-weight:800; padding:2px 7px; border-radius:999px; border:1px solid var(--line); letter-spacing:.4px; white-space:nowrap;}
+.owBubble{width:60px; height:60px; border-radius:50%; background:var(--card2); border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:28px; box-shadow:var(--shadow); margin-top:6px; transition:transform .08s;}
+.owNode.unlocked .owBubble{box-shadow:0 0 0 3px var(--accent), var(--shadow);}
+.owNode.unlocked:active .owBubble{transform:scale(.92);}
+.owNode.locked .owBubble{opacity:.5; filter:grayscale(.35);}
+.owNode.locked .owTitle, .owNode.locked .owSub{opacity:.5;}
+.owTitle{font-size:12px; font-weight:700; line-height:1.15;}
+.owSub{font-size:10px; color:var(--dim); line-height:1.15;}
 .card{
   background:var(--card); border:1px solid var(--line); border-radius:18px;
   padding:14px; margin-top:14px; box-shadow:var(--shadow);
@@ -114,13 +132,25 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
 </style>
 </head>
 <body>
+<div id="mapScreen">
+  <div id="owBand"></div>
+  <div class="owHeader">
+    <h1>🗺️ Shred Looper</h1>
+    <div id="owSubtitle">tap a stage to start</div>
+  </div>
+  <div id="owWrap">
+    <svg id="owPath"></svg>
+  </div>
+</div>
+
+<div id="playScreen" style="display:none">
 <div id="band"></div>
 <header>
+  <button id="btnMap">🗺️</button>
   <div>
     <h1 id="title">Shred Looper</h1>
     <div id="diffline"></div>
   </div>
-  <select id="songSel"></select>
 </header>
 
 <div class="card" id="laneCard">
@@ -178,6 +208,7 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
 <div class="card">
   <h3>Sections</h3>
   <div id="sections"></div>
+</div>
 </div>
 
 <script>
@@ -660,14 +691,90 @@ function loadSong(idx){
   saveState();
 }
 
+/* ---------------- overworld map ---------------- */
+const SUBS = { crazy: 'Ozzy Osbourne', dolphin: 'Super Mario Odyssey', world: 'Brad Paisley' };
+const MAP_STAGES = [
+  { label: 'Tutorial', songId: 'crazy' },
+  { world: 1 },
+  { label: '1-1', songId: 'dolphin' },
+  { label: '1-2', songId: 'world' },
+  { label: '1-3', title: 'GOAT', sub: 'Polyphia', emoji: '🐐' },
+  { label: '1-Boss', title: 'Texas Flood', sub: 'Stevie Ray Vaughan', emoji: '🌊' },
+  { world: 2 },
+  { label: '2-1', title: 'Voodoo Chile', sub: 'Jimi Hendrix', emoji: '🗿' },
+  { label: '2-2', title: 'Miles of Machines', emoji: '⚙️' },
+  { label: '2-3', title: 'Ion Drive', emoji: '🛸' },
+  { label: '2-Boss', title: 'Beat It', sub: 'Michael Jackson', emoji: '🎩' },
+  { world: 3 },
+  { label: '3-1', title: 'Roy G Ziv', emoji: '🐆' },
+  { label: '3-2', title: 'Technical Difficulties', sub: 'Racer X', emoji: '🏎️' },
+  { label: '3-3', title: 'Cliffs of Dover', sub: 'Eric Johnson', emoji: '🇬🇧' },
+  { label: '3-Boss', title: 'Eruption', sub: 'Eddie Van Halen', emoji: '🌋' },
+];
+const owWrap = $('owWrap'), owPath = $('owPath');
+function renderMap(){
+  owWrap.querySelectorAll('.owNode,.owWorldLabel').forEach((el) => el.remove());
+  const width = owWrap.clientWidth || 320;
+  const ROW_H = 108, AMPL = Math.min(86, width * 0.27);
+  let y = 46, ni = 0;
+  const pts = [];
+  for(const st of MAP_STAGES){
+    if(st.world != null){
+      const lab = document.createElement('div');
+      lab.className = 'owWorldLabel';
+      lab.style.top = y + 'px';
+      lab.textContent = 'World ' + st.world;
+      owWrap.appendChild(lab);
+      y += 40;
+      continue;
+    }
+    const song = st.songId ? DATA.songs.find((s) => s.id === st.songId) : null;
+    const x = width / 2 + AMPL * Math.sin(ni * 0.9);
+    const emoji = song ? song.emoji : st.emoji;
+    const title = song ? song.name : st.title;
+    const sub = st.songId ? SUBS[st.songId] : (st.sub || '');
+    const node = document.createElement('div');
+    node.className = 'owNode ' + (song ? 'unlocked' : 'locked');
+    node.style.left = x + 'px'; node.style.top = y + 'px';
+    node.innerHTML = '<div class="owBadge">' + st.label + '</div>' +
+      '<div class="owBubble">' + emoji + '</div>' +
+      '<div class="owTitle">' + title + '</div>' +
+      (sub ? '<div class="owSub">' + sub + '</div>' : '');
+    if(song) node.onclick = () => showPlay(DATA.songs.findIndex((s) => s.id === song.id));
+    owWrap.appendChild(node);
+    pts.push({ x, y });
+    y += ROW_H; ni++;
+  }
+  const totalH = y - ROW_H + 70;
+  owWrap.style.height = totalH + 'px';
+  owPath.setAttribute('width', width);
+  owPath.setAttribute('height', totalH);
+  let d = '';
+  if(pts.length){
+    d = 'M ' + pts[0].x + ' ' + pts[0].y;
+    for(let i = 1; i < pts.length; i++){
+      const mx = (pts[i - 1].x + pts[i].x) / 2, my = (pts[i - 1].y + pts[i].y) / 2;
+      d += ' Q ' + pts[i - 1].x + ' ' + pts[i - 1].y + ' ' + mx + ' ' + my;
+    }
+    d += ' L ' + pts[pts.length - 1].x + ' ' + pts[pts.length - 1].y;
+  }
+  owPath.innerHTML = '<path d="' + d + '"></path>';
+}
+function showPlay(idx){
+  $('mapScreen').style.display = 'none';
+  $('playScreen').style.display = '';
+  loadSong(idx);
+}
+function showMap(){
+  stop();
+  $('playScreen').style.display = 'none';
+  $('mapScreen').style.display = '';
+  document.body.dataset.theme = 'map';
+  renderMap();
+}
+
 /* ---------------- wiring ---------------- */
-const sel = $('songSel');
-DATA.songs.forEach((s, i) => {
-  const o = document.createElement('option');
-  o.value = i; o.textContent = s.emoji + ' ' + s.name;
-  sel.appendChild(o);
-});
-sel.onchange = () => loadSong(+sel.value);
+$('btnMap').onclick = showMap;
 
 $('btnPlay').onclick = togglePlay;
 $('btnStop').onclick = stop;
@@ -716,13 +823,16 @@ document.addEventListener('visibilitychange', () => {
     ctx.resume().then(() => warmup()).catch(() => {});
   }
 });
-window.addEventListener('resize', () => { renderStatic(); renderSectionsStrip(); draw(); });
+window.addEventListener('resize', () => {
+  if(song){ renderStatic(); renderSectionsStrip(); draw(); }
+  if($('mapScreen').style.display !== 'none') renderMap();
+});
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 
-loadSong(0);
+showMap();
 rafLoop();
 </script>
 </body>
