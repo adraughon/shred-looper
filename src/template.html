@@ -111,7 +111,7 @@ h1{
 .owCurb{position:absolute; top:26px; bottom:0; width:13px; border-radius:2px;}
 .owCurb.l{left:6px; background:repeating-linear-gradient(135deg, rgba(196,58,48,.22) 0 13px, rgba(232,233,238,.14) 13px 26px);}
 .owCurb.r{right:6px; background:repeating-linear-gradient(45deg, rgba(196,58,48,.22) 0 13px, rgba(232,233,238,.14) 13px 26px);}
-.owFinale{position:absolute; left:0; bottom:0; width:100%; height:210px; z-index:1; pointer-events:none;}
+.owFinale{position:absolute; left:0; width:100%; z-index:1; pointer-events:none;}
 
 .owNode{position:absolute; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; z-index:3;}
 .owNode.unlocked{cursor:pointer;}
@@ -136,6 +136,9 @@ h1{
 .owNode.boss.locked .owBubble{background:var(--card); border:3px solid rgba(255,81,64,.5); filter:grayscale(.7); opacity:.62; font-size:32px;}
 .owNode.boss .owTitle{font:800 14px/1.2 -apple-system, system-ui, sans-serif;}
 .owNode.boss.unlocked .owSub{color:#ff8f80;}
+/* w0's pale wood backdrop needs dark text, not the usual light-on-dark treatment */
+.owNode.w0.unlocked .owTitle{color:#2a1a08; text-shadow:0 1px 1px rgba(255,255,255,.4);}
+.owNode.w0.unlocked .owSub{color:#4a3018; text-shadow:0 1px 1px rgba(255,255,255,.4);}
 @keyframes owDash{ to{ stroke-dashoffset:-28; } }
 @keyframes owGlow{
   0%,100%{ box-shadow:0 6px 16px var(--shadow), 0 0 0 6px rgba(255,176,32,.10); }
@@ -754,7 +757,7 @@ const SUBS = { crazy: 'Randy Rhoads', dolphin: 'Mario Kart 8', world: 'Brad Pais
 const MAP_STAGES = [
   { label: 'Tutorial', songId: 'crazy', world: 0 },
   { label: '1-1', songId: 'dolphin', world: 1 },
-  { label: '1-2', songId: 'world', world: 1 },
+  { label: '1-2', songId: 'world', world: 1, emoji: '🤠' },
   { label: '1-3', title: 'GOAT', sub: 'Tim Henson', emoji: '🐐', world: 1 },
   { label: '1-Boss', title: 'Texas Flood', sub: 'Stevie Ray Vaughan', emoji: '🌊', world: 1 },
   { label: '2-1', title: 'Voodoo Chile', sub: 'Jimi Hendrix', emoji: '👽', world: 2 },
@@ -804,12 +807,12 @@ function worldMotif(w){
         '<ellipse cx="0" cy="4" rx="26" ry="7" fill="rgba(150,215,225,.22)"></ellipse>' +
         '<path d="M-24 2 Q0 -16 24 2 Z" fill="#cda766"></path>' +
         '<path d="M-24 2 Q0 -6 24 2 L24 4 Q0 -3 -24 4 Z" fill="#a9834a"></path>' +
-        '<path d="M3 -12 Q-1 -34 5 -50" stroke="#6f512c" stroke-width="4" fill="none" stroke-linecap="round"></path>' +
+        '<path d="M3 -4 Q-1 -26 5 -42" stroke="#6f512c" stroke-width="4" fill="none" stroke-linecap="round"></path>' +
         '<g stroke="#4f8a4d" stroke-width="3.2" fill="none" stroke-linecap="round">' +
-          '<path d="M5 -50 Q-12 -56 -22 -47"></path>' +
-          '<path d="M5 -50 Q-4 -64 -14 -66"></path>' +
-          '<path d="M5 -50 Q12 -64 24 -62"></path>' +
-          '<path d="M5 -50 Q22 -54 30 -42"></path>' +
+          '<path d="M5 -42 Q-12 -48 -22 -39"></path>' +
+          '<path d="M5 -42 Q-4 -56 -14 -58"></path>' +
+          '<path d="M5 -42 Q12 -56 24 -54"></path>' +
+          '<path d="M5 -42 Q22 -46 30 -34"></path>' +
         '</g>' +
       '</g>' +
     '</svg>' +
@@ -818,11 +821,11 @@ function worldMotif(w){
         '<ellipse cx="0" cy="4" rx="24" ry="6" fill="rgba(150,215,225,.22)"></ellipse>' +
         '<path d="M-22 2 Q0 -14 22 2 Z" fill="#cda766"></path>' +
         '<path d="M-22 2 Q0 -5 22 2 L22 4 Q0 -3 -22 4 Z" fill="#a9834a"></path>' +
-        '<path d="M-2 -11 Q-5 -30 1 -45" stroke="#6f512c" stroke-width="3.6" fill="none" stroke-linecap="round"></path>' +
+        '<path d="M-2 -5 Q-5 -24 1 -39" stroke="#6f512c" stroke-width="3.6" fill="none" stroke-linecap="round"></path>' +
         '<g stroke="#4f8a4d" stroke-width="3" fill="none" stroke-linecap="round">' +
-          '<path d="M1 -45 Q-16 -50 -24 -40"></path>' +
-          '<path d="M1 -45 Q-7 -58 -16 -60"></path>' +
-          '<path d="M1 -45 Q14 -56 24 -52"></path>' +
+          '<path d="M1 -39 Q-16 -44 -24 -34"></path>' +
+          '<path d="M1 -39 Q-7 -52 -16 -54"></path>' +
+          '<path d="M1 -39 Q14 -50 24 -46"></path>' +
         '</g>' +
       '</g>' +
     '</svg>' +
@@ -863,13 +866,33 @@ function renderMap(){
     const x = cx + amp * Math.sin(i * 0.9), y = startY + i * rowH;
     return {
       st, song, isBoss, unlocked, world: st.world,
-      emoji: song ? song.emoji : st.emoji,
+      emoji: st.emoji || (song ? song.emoji : ''),
       title: song ? song.name : st.title,
       sub: st.songId ? SUBS[st.songId] : (st.sub || ''),
       cx: x, cy: y, left: x - w / 2, top: y - off, w,
     };
   });
-  const totalH = nodes[nodes.length - 1].cy + 300;
+  owWrap.style.height = (nodes[nodes.length - 1].cy + 600) + 'px';  // generous provisional height for measurement
+
+  const nodeEls = [];
+  for(const n of nodes){
+    const div = document.createElement('div');
+    div.className = 'owNode ' + (n.unlocked ? 'unlocked' : 'locked') + (n.isBoss ? ' boss' : '') + (n.world === 0 ? ' w0' : '');
+    div.style.left = n.left + 'px'; div.style.top = n.top + 'px'; div.style.width = n.w + 'px';
+    const badgeText = n.isBoss ? '👑 BOSS' : n.st.label;
+    const subText = n.unlocked ? n.sub : 'Locked';
+    div.innerHTML = '<div class="owBadge">' + badgeText + '</div>' +
+      '<div class="owBubble">' + n.emoji + '</div>' +
+      '<div class="owTitle">' + n.title + '</div>' +
+      (subText ? '<div class="owSub">' + subText + '</div>' : '');
+    if(n.unlocked) div.onclick = () => showPlay(DATA.songs.findIndex((s) => s.id === n.song.id));
+    owWrap.appendChild(div);
+    nodeEls.push(div);
+  }
+  const lastEl = nodeEls[nodeEls.length - 1];
+  const lastBottom = lastEl.offsetTop + lastEl.offsetHeight;
+  const FIN_GAP = 12, FIN_H = 50;
+  const totalH = Math.round(lastBottom + FIN_GAP + FIN_H);
   owWrap.style.height = totalH + 'px';
 
   const worlds = [...new Set(nodes.map((n) => n.world))];
@@ -888,26 +911,12 @@ function renderMap(){
     owWrap.appendChild(bg);
   }
 
-  for(const n of nodes){
-    const div = document.createElement('div');
-    div.className = 'owNode ' + (n.unlocked ? 'unlocked' : 'locked') + (n.isBoss ? ' boss' : '');
-    div.style.left = n.left + 'px'; div.style.top = n.top + 'px'; div.style.width = n.w + 'px';
-    const badgeText = n.isBoss ? '👑 BOSS' : n.st.label;
-    const subText = n.unlocked ? n.sub : 'Locked';
-    div.innerHTML = '<div class="owBadge">' + badgeText + '</div>' +
-      '<div class="owBubble">' + n.emoji + '</div>' +
-      '<div class="owTitle">' + n.title + '</div>' +
-      (subText ? '<div class="owSub">' + subText + '</div>' : '');
-    if(n.unlocked) div.onclick = () => showPlay(DATA.songs.findIndex((s) => s.id === n.song.id));
-    owWrap.appendChild(div);
-  }
-
   const palette = ['#ff6a5a', '#37c6d0', '#ffd24a', '#6bd18a', '#e0559b', '#6aa8ff'];
   const rnd = (s) => { const v = Math.sin(s * 127.1) * 43758.5453; return v - Math.floor(v); };
   let confetti = '';
-  for(let i = 0; i < 22; i++){
+  for(let i = 0; i < 18; i++){
     const rg = i % 2 ? [270, 380] : [12, 118];
-    const fx = rg[0] + rnd(i * 1.7) * (rg[1] - rg[0]), fy = 28 + rnd(i * 2.9) * 148;
+    const fx = rg[0] + rnd(i * 1.7) * (rg[1] - rg[0]), fy = 2 + rnd(i * 2.9) * 42;
     const rot = Math.round((rnd(i * 3.3) - 0.5) * 120);
     confetti += '<rect x="' + fx.toFixed(1) + '" y="' + fy.toFixed(1) + '" width="5" height="9" rx="1" fill="' +
       palette[i % palette.length] + '" transform="rotate(' + rot + ' ' + (fx + 2.5).toFixed(1) + ' ' + (fy + 4).toFixed(1) +
@@ -915,18 +924,20 @@ function renderMap(){
   }
   const finale = document.createElement('div');
   finale.className = 'owFinale';
+  finale.style.top = (lastBottom + FIN_GAP) + 'px';
+  finale.style.height = FIN_H + 'px';
   finale.innerHTML =
-    '<svg viewBox="0 0 390 210" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">' +
+    '<svg viewBox="0 0 390 ' + FIN_H + '" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible">' +
       '<defs><pattern id="owFin" width="28" height="26" patternUnits="userSpaceOnUse">' +
         '<rect width="28" height="26" fill="#e8e9ee"></rect>' +
         '<rect width="14" height="13" fill="#14161a"></rect>' +
         '<rect x="14" y="13" width="14" height="13" fill="#14161a"></rect>' +
       '</pattern></defs>' +
       confetti +
-      '<text x="195" y="180" text-anchor="middle" fill="rgba(255,255,255,.55)" style="font:700 8px ui-monospace,monospace;letter-spacing:3px">FINISH</text>' +
-      '<rect x="18" y="176" width="5" height="32" rx="2" fill="#c9ccd4"></rect>' +
-      '<rect x="367" y="176" width="5" height="32" rx="2" fill="#c9ccd4"></rect>' +
-      '<rect x="0" y="184" width="390" height="22" fill="url(#owFin)" opacity=".92"></rect>' +
+      '<text x="195" y="10" text-anchor="middle" fill="rgba(255,255,255,.6)" style="font:700 7px ui-monospace,monospace;letter-spacing:3px">FINISH</text>' +
+      '<rect x="18" y="6" width="5" height="34" rx="2" fill="#c9ccd4"></rect>' +
+      '<rect x="367" y="6" width="5" height="34" rx="2" fill="#c9ccd4"></rect>' +
+      '<rect x="0" y="14" width="390" height="18" fill="url(#owFin)" opacity=".92"></rect>' +
     '</svg>';
   owWrap.appendChild(finale);
 
