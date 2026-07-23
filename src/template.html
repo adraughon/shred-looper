@@ -916,9 +916,9 @@ function renderMap(){
   const palette = ['#ff6a5a', '#37c6d0', '#ffd24a', '#6bd18a', '#e0559b', '#6aa8ff'];
   const rnd = (s) => { const v = Math.sin(s * 127.1) * 43758.5453; return v - Math.floor(v); };
   let confetti = '';
-  for(let i = 0; i < 18; i++){
-    const rg = i % 2 ? [270, 380] : [12, 118];
-    const fx = rg[0] + rnd(i * 1.7) * (rg[1] - rg[0]), fy = 2 + rnd(i * 2.9) * 42;
+  for(let i = 0; i < 36; i++){
+    const rg = i % 2 ? [260, 380] : [12, 128];
+    const fx = rg[0] + rnd(i * 1.7) * (rg[1] - rg[0]), fy = -26 + rnd(i * 2.9) * 60;
     const rot = Math.round((rnd(i * 3.3) - 0.5) * 120);
     confetti += '<rect x="' + fx.toFixed(1) + '" y="' + fy.toFixed(1) + '" width="5" height="9" rx="1" fill="' +
       palette[i % palette.length] + '" transform="rotate(' + rot + ' ' + (fx + 2.5).toFixed(1) + ' ' + (fy + 4).toFixed(1) +
