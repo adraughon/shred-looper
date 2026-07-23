@@ -117,17 +117,18 @@ h1{
 .owNode.unlocked{cursor:pointer;}
 .owBadge{font:700 10px/1 ui-monospace, "SF Mono", monospace; letter-spacing:.06em; padding:3px 8px; border-radius:999px; white-space:nowrap;}
 .owNode.unlocked .owBadge{color:#1a1206; background:var(--accent); box-shadow:0 2px 6px var(--shadow);}
-.owNode.locked .owBadge{color:var(--dim); background:var(--card2); border:1px solid var(--line);}
+.owNode.locked .owBadge{color:var(--dim); background:var(--card2); border:1px solid var(--line); opacity:.9;}
 .owBubble{width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px;}
 .owNode.unlocked .owBubble{background:radial-gradient(120% 120% at 50% 25%, var(--card2), var(--card)); border:3px solid var(--accent); animation:owGlow 3.6s ease-in-out infinite;}
 .owNode.locked .owBubble{background:var(--card); border:2px solid var(--line); filter:grayscale(1); opacity:.55; font-size:26px;}
 .owTitle{font:700 13.5px/1.2 -apple-system, system-ui, sans-serif; text-wrap:balance;}
 .owNode.unlocked .owTitle{color:var(--fg); text-shadow:0 1px 3px rgba(0,0,0,.65);}
-.owNode.locked .owTitle{color:var(--dim); text-shadow:0 1px 2px rgba(0,0,0,.6);}
 .owSub{font:500 11px/1.2 -apple-system, system-ui, sans-serif; color:var(--dim);}
 .owNode.unlocked .owSub{text-shadow:0 1px 2px rgba(0,0,0,.6);}
-.owNode.locked .owSub{opacity:.8;}
-.owNode.locked{opacity:.82;}
+/* locked text sits on a solid scrim so it reads over any world's backdrop art */
+.owLockText{background:rgba(0,0,0,.5); border-radius:8px; padding:4px 8px; display:flex; flex-direction:column; gap:2px;}
+.owLockText .owTitle{color:#e7eaf1;}
+.owLockText .owSub{color:#aab0bd;}
 .owNode.boss .owBadge{font-weight:800; letter-spacing:.12em; padding:3px 10px;}
 .owNode.boss.unlocked .owBadge{color:#2a0806; background:linear-gradient(180deg,#ffb020,#ff5140); box-shadow:0 2px 8px rgba(255,81,64,.45);}
 .owNode.boss.locked .owBadge{border:1px solid rgba(255,81,64,.4);}
@@ -764,7 +765,7 @@ const MAP_STAGES = [
   { label: '2-2', title: 'Miles of Machines', sub: 'Jeff Loomis', emoji: '⚙️', world: 2 },
   { label: '2-3', title: 'Ion Drive', sub: 'Joel Gregoire', emoji: '🛸', world: 2 },
   { label: '2-Boss', title: 'Beat It', sub: 'Michael Jackson', emoji: '🎸', world: 2 },
-  { label: '3-1', title: 'Roy G Ziv', sub: 'fast pentatonic licks', emoji: '🐆', world: 3 },
+  { label: '3-1', title: 'Pentatonic Licks', sub: 'Roy G Ziv', emoji: '🐆', world: 3 },
   { label: '3-2', title: 'Technical Difficulties', sub: 'Paul Gilbert', emoji: '🏎️', world: 3 },
   { label: '3-3', title: 'Cliffs of Dover', sub: 'Eric Johnson', emoji: '🇬🇧', world: 3 },
   { label: '3-Boss', title: 'Eruption', sub: 'Eddie Van Halen', emoji: '🌋', world: 3 },
@@ -881,10 +882,11 @@ function renderMap(){
     div.style.left = n.left + 'px'; div.style.top = n.top + 'px'; div.style.width = n.w + 'px';
     const badgeText = n.isBoss ? '👑 BOSS' : n.st.label;
     const subText = n.unlocked ? n.sub : 'Locked';
+    const text = '<div class="owTitle">' + n.title + '</div>' +
+      (subText ? '<div class="owSub">' + subText + '</div>' : '');
     div.innerHTML = '<div class="owBadge">' + badgeText + '</div>' +
       '<div class="owBubble">' + n.emoji + '</div>' +
-      '<div class="owTitle">' + n.title + '</div>' +
-      (subText ? '<div class="owSub">' + subText + '</div>' : '');
+      (n.unlocked ? text : '<div class="owLockText">' + text + '</div>');
     if(n.unlocked) div.onclick = () => showPlay(DATA.songs.findIndex((s) => s.id === n.song.id));
     owWrap.appendChild(div);
     nodeEls.push(div);
