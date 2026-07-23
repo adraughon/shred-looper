@@ -217,7 +217,7 @@ def main():
         'sections': [
             {'name': 'Trills', 'a': 0.0, 'b': 16.0},
             {'name': 'Middle', 'a': 16.0, 'b': 32.0},
-            {'name': 'More Trills', 'a': 32.0, 'b': 42.0},
+            {'name': 'More Trills', 'a': 32.0, 'b': 44.0},
             {'name': 'Last Bits', 'a': 44.0, 'b': 56.0},
             {'name': 'Outro run', 'a': 56.0, 'b': half_bar_len(56.0, 64.0)},
         ],
