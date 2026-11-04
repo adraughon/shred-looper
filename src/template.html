@@ -353,7 +353,7 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
 
 <div class="card">
   <h3>Progression</h3>
-  <input class="btText" id="btProg" type="text" placeholder="vi I V vi" enterkeyhint="done"
+  <input class="btText" id="btProg" type="text" placeholder="vi vi I V" enterkeyhint="done"
          autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false">
   <div id="btErr"></div>
   <div id="btPresets"></div>
@@ -1101,7 +1101,7 @@ const BT_LETTERS = 'CDEFGAB';
 const BT_MAJOR = [0, 2, 4, 5, 7, 9, 11];   // semitones of each major scale degree
 const BT_ROMAN = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 };
 const BT_PRESETS = [
-  { name: 'vi I V vi (Crazy Train)', prog: 'vi I V vi' },
+  { name: 'vi vi I V (Crazy Train)', prog: 'vi vi I V' },
   { name: 'I V vi IV', prog: 'I V vi IV' },
   { name: 'I IV V IV', prog: 'I IV V IV' },
   { name: 'vi IV I V', prog: 'vi IV I V' },
@@ -1157,7 +1157,7 @@ function btHz(midi){ return 440 * Math.pow(2, (midi - 69) / 12); }
 /* ---------------- backing track: settings ---------------- */
 const BT_LS = LS + 'backing', BT_LS_PRESETS = LS + 'backingPresets';
 const bt = {
-  key: 9, prog: 'vi I V vi', per: 1, bpm: 120, bass: 'eighths', countIn: true,
+  key: 9, prog: 'vi vi I V', per: 1, bpm: 120, bass: 'eighths', countIn: true,
   vols: { drums: 100, bass: 100, pad: 100 },
   mutes: { drums: false, bass: false, pad: false },
 };
