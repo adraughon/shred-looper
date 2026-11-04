@@ -204,13 +204,19 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
 #btBand{height:10px; border-radius:999px; margin:0 0 10px; background:var(--band);}
 #btBack{min-width:48px; padding:0; font-size:20px;}
 #btDisplay{position:sticky; top:calc(env(safe-area-inset-top) + 6px); z-index:5; margin-top:0; text-align:center;}
-#btChord{
-  font-weight:800; line-height:1.1; white-space:nowrap; font-size:64px;
-  font-variant-numeric:tabular-nums; min-height:1.1em;
+#btKeyBig{font-size:34px; font-weight:800; line-height:1.1; margin-bottom:10px;}
+#btChips{display:grid; gap:8px;}
+.btChip{
+  background:var(--card2); border:1px solid var(--line); border-radius:14px;
+  padding:10px 2px; min-width:0; overflow:hidden; white-space:nowrap;
 }
-#btNextRow{display:flex; justify-content:center; align-items:baseline; gap:14px; margin-top:6px;}
-#btNext{font-size:28px; font-weight:700; color:var(--dim); white-space:nowrap;}
-#btCountdown{font-size:40px; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums; min-width:1ch;}
+.btChip .n{font-size:22px; font-weight:700; color:var(--dim);}
+.btChip .c{font-size:30px; font-weight:800; line-height:1.15;}
+.btChip.now{background:var(--accent); border-color:var(--accent); color:#06231f;}
+.btChip.now .n{color:#06231f;}
+#btNextRow{display:flex; justify-content:center; align-items:baseline; gap:10px; margin-top:8px; min-height:50px;}
+#btNext{font-size:20px; font-weight:600; color:var(--dim); white-space:nowrap;}
+#btCountdown{font-size:42px; font-weight:800; font-variant-numeric:tabular-nums;}
 #btBar{font-size:18px; font-weight:600; color:var(--dim); font-variant-numeric:tabular-nums; margin:4px 0 12px;}
 #btPlay{
   flex:1; background:var(--fg); color:var(--bg); border-color:var(--fg);
@@ -329,7 +335,8 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
 </header>
 
 <div class="card" id="btDisplay">
-  <div id="btChord"></div>
+  <div id="btKeyBig"></div>
+  <div id="btChips"></div>
   <div id="btNextRow"><span id="btNext"></span><span id="btCountdown"></span></div>
   <div id="btBar"></div>
   <div class="row">
@@ -346,7 +353,7 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
 
 <div class="card">
   <h3>Progression</h3>
-  <input class="btText" id="btProg" type="text" placeholder="vi I V V" enterkeyhint="done"
+  <input class="btText" id="btProg" type="text" placeholder="vi I V vi" enterkeyhint="done"
          autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false">
   <div id="btErr"></div>
   <div id="btPresets"></div>
@@ -1094,7 +1101,7 @@ const BT_LETTERS = 'CDEFGAB';
 const BT_MAJOR = [0, 2, 4, 5, 7, 9, 11];   // semitones of each major scale degree
 const BT_ROMAN = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 };
 const BT_PRESETS = [
-  { name: 'vi I V V (Crazy Train)', prog: 'vi I V V' },
+  { name: 'vi I V vi (Crazy Train)', prog: 'vi I V vi' },
   { name: 'I V vi IV', prog: 'I V vi IV' },
   { name: 'I IV V IV', prog: 'I IV V IV' },
   { name: 'vi IV I V', prog: 'vi IV I V' },
@@ -1137,7 +1144,7 @@ function btBuildPlan(keyIdx, progText, per){
     chords.push(c);
   }
   return { plan: {
-    chords, per,
+    chords, per, key: BT_KEYS[keyIdx],
     norm: chords.map((c) => c.num).join(' '),
     loopBars: chords.length * per,
   } };
@@ -1150,7 +1157,7 @@ function btHz(midi){ return 440 * Math.pow(2, (midi - 69) / 12); }
 /* ---------------- backing track: settings ---------------- */
 const BT_LS = LS + 'backing', BT_LS_PRESETS = LS + 'backingPresets';
 const bt = {
-  key: 9, prog: 'vi I V V', per: 1, bpm: 120, bass: 'eighths', countIn: true,
+  key: 9, prog: 'vi I V vi', per: 1, bpm: 120, bass: 'eighths', countIn: true,
   vols: { drums: 100, bass: 100, pad: 100 },
   mutes: { drums: false, bass: false, pad: false },
 };
@@ -1392,7 +1399,7 @@ function btBeginBar(s){
   const t = btBarTime(s, s.barNo), dur = 240 / bt.bpm;
   if(dur !== s.barDur){ s.anchorT = t; s.anchorBar = s.barNo; s.barDur = dur; }
   if(s.counting){
-    s.queue.push({ t, dur, count: true, next: btNextChord(s), beatsAtBarStart: 4 });
+    s.queue.push({ t, dur, count: true, plan: btPending ? btPending.plan : btPlan, idx: -1, beatsAtBarStart: 4 });
     return;
   }
   if(btPending){
@@ -1408,7 +1415,7 @@ function btBeginBar(s){
   if(!s.pad && !stale) s.pad = btPadStart(t, chord);
   if(lastBar && s.pad){ btPadRelease(s.pad, t + dur); s.pad = null; }
   s.queue.push({
-    t, dur, chord, next: btNextChord(s),
+    t, dur, plan, idx: s.chord,
     beatsAtBarStart: (plan.per - s.barIn) * 4,
     pos: s.chord * plan.per + s.barIn + 1, loopBars: plan.loopBars,
   });
@@ -1516,18 +1523,13 @@ function btApplySettings(){
   const r = btBuildPlan(bt.key, bt.prog, bt.per);
   if(!r.plan) return;
   if(btPlaying){
-    const cur = btPending ? btPending.plan : btPlan;
     const restart = (btPending && btPending.restart) ||
         r.plan.norm !== btPlan.norm || r.plan.per !== btPlan.per;
     btPending = { plan: r.plan, restart };
     const last = btS.queue[btS.queue.length - 1];
-    if(last && cur){
-      last.next = btNextChord(btS);
-      if(!last.count) last.beatsAtBarStart = 4;
-    }
+    if(last && !last.count) last.beatsAtBarStart = 4;
   }else{
     btPlan = r.plan;
-    btFitChord();
     btRender();
   }
   btRenderPresets();
@@ -1535,15 +1537,35 @@ function btApplySettings(){
 
 /* ---------------- backing track: display ---------------- */
 function btSetText(el, s){ if(el.textContent !== s) el.textContent = s; }
+function btRenderChips(plan, idx){
+  const wrap = $('btChips');
+  if(wrap.btPlan !== plan){
+    wrap.btPlan = plan; wrap.btIdx = -1;
+    $('btKeyBig').textContent = 'Key of ' + plan.key;
+    wrap.style.gridTemplateColumns = 'repeat(' + Math.min(4, plan.chords.length) + ',1fr)';
+    wrap.innerHTML = '';
+    for(const ch of plan.chords){
+      const chip = document.createElement('div');
+      chip.className = 'btChip';
+      const n = document.createElement('div'); n.className = 'n'; n.textContent = ch.num;
+      const c = document.createElement('div'); c.className = 'c'; c.textContent = ch.name;
+      chip.append(n, c);
+      wrap.appendChild(chip);
+    }
+  }
+  if(wrap.btIdx !== idx){
+    if(wrap.btIdx >= 0) wrap.children[wrap.btIdx].classList.remove('now');
+    if(idx >= 0) wrap.children[idx].classList.add('now');
+    wrap.btIdx = idx;
+  }
+}
 function btRender(){
-  const elChord = $('btChord'), elNext = $('btNext'), elCount = $('btCountdown'), elBar = $('btBar');
+  const elNext = $('btNext'), elCount = $('btCountdown'), elBar = $('btBar');
   if(!btPlaying || !btS){
-    const plan = btPlan;
-    btSetText(elChord, plan.chords[0].label);
-    const nextCh = plan.per > 1 ? plan.chords[0] : plan.chords[1 % plan.chords.length];
-    btSetText(elNext, 'Next ' + nextCh.label);
+    btRenderChips(btPlan, -1);
+    btSetText(elNext, '');
     btSetText(elCount, '');
-    btSetText(elBar, 'Bar 1 / ' + plan.loopBars);
+    btSetText(elBar, 'Bar 1 / ' + btPlan.loopBars);
     return;
   }
   // currentTime runs ahead of what you hear by the output latency
@@ -1553,8 +1575,8 @@ function btRender(){
   const e = q[0];
   if(!e) return;
   const beat = Math.max(0, Math.min(3, Math.floor((now - e.t) / (e.dur / 4))));
-  btSetText(elChord, e.count ? String(beat + 1) : e.chord.label);
-  btSetText(elNext, 'Next ' + e.next.label);
+  btRenderChips(e.plan, e.idx);
+  btSetText(elNext, e.count ? 'Starting in' : 'Change in');
   btSetText(elCount, String(e.beatsAtBarStart - beat));
   btSetText(elBar, e.count ? 'Count-in' : 'Bar ' + e.pos + ' / ' + e.loopBars);
 }
@@ -1562,18 +1584,6 @@ function btFrame(){
   if(!btPlaying) return;
   btRender();
   btRaf = requestAnimationFrame(btFrame);
-}
-/* One size for the whole progression, picked to fit the longest chord, so the
-   text doesn't change size from chord to chord. */
-function btFitChord(){
-  const el = $('btChord');
-  const avail = el.clientWidth;
-  if(!avail || !btPlan) return;
-  const c = btFitChord.c || (btFitChord.c = document.createElement('canvas').getContext('2d'));
-  c.font = '800 100px ' + getComputedStyle(el).fontFamily;
-  let widest = 1;
-  for(const ch of btPlan.chords) widest = Math.max(widest, c.measureText(ch.label).width);
-  el.style.fontSize = Math.round(Math.min(112, 100 * avail * 0.98 / widest)) + 'px';
 }
 
 /* ---------------- backing track: dice ---------------- */
@@ -1747,7 +1757,6 @@ function showBacking(){
   $('playScreen').style.display = 'none';
   $('btScreen').style.display = '';
   document.body.dataset.theme = 'backing';
-  btFitChord();
   btRender();
 }
 btLoadState();
@@ -1812,7 +1821,6 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('resize', () => {
   if(song && $('playScreen').style.display !== 'none'){ renderStatic(); renderSectionsStrip(); draw(); }
   if($('mapScreen').style.display !== 'none') renderMap();
-  if($('btScreen').style.display !== 'none') btFitChord();
 });
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
