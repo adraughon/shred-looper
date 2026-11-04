@@ -1696,10 +1696,10 @@ function btRenderPresets(){
 function btSavePreset(){
   const plan = btCheckProg();
   if(!plan) return;
-  const typed = $('btPresetName').value.trim(), name = typed || plan.norm;
-  const known = BT_PRESETS.concat(btCustom).some((p) =>
-      btBuildPlan(bt.key, p.prog, 1).plan.norm === plan.norm && (!typed || p.name === name));
-  if(known) return;
+  const same = BT_PRESETS.concat(btCustom).find((p) =>
+      btBuildPlan(bt.key, p.prog, 1).plan.norm === plan.norm);
+  if(same){ btShowErr('Already saved as "' + same.name + '".'); return; }
+  const name = $('btPresetName').value.trim() || plan.norm;
   btCustom = btCustom.filter((p) => p.name !== name);
   btCustom.push({ name, prog: plan.norm });
   btSaveCustom();
