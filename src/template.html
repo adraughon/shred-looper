@@ -368,7 +368,7 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
 <div class="card">
   <h3>Bars per chord</h3>
   <div class="seg" id="btBars">
-    <button data-v="1">1</button><button data-v="2">2</button><button data-v="4">4</button>
+    <button data-v="0.5">1/2</button><button data-v="1">1</button><button data-v="2">2</button><button data-v="4">4</button>
   </div>
 </div>
 
@@ -1146,7 +1146,7 @@ function btBuildPlan(keyIdx, progText, per){
   return { plan: {
     chords, per, key: BT_KEYS[keyIdx],
     norm: chords.map((c) => c.num).join(' '),
-    loopBars: chords.length * per,
+    loopBars: Math.ceil(chords.length * per),
   } };
 }
 /* Bass roots stay E1..D#2, pad roots stay in octave 3. */
@@ -1176,7 +1176,7 @@ function btLoadState(){
   if(s){
     if(Number.isInteger(s.key) && s.key >= 0 && s.key < 12) bt.key = s.key;
     if(typeof s.prog === 'string' && btBuildPlan(0, s.prog, 1).plan) bt.prog = s.prog;
-    if([1, 2, 4].includes(s.per)) bt.per = s.per;
+    if([0.5, 1, 2, 4].includes(s.per)) bt.per = s.per;
     if(s.bpm >= 40 && s.bpm <= 200) bt.bpm = s.bpm;
     if(['eighths', 'quarters', 'off'].includes(s.bass)) bt.bass = s.bass;
     if(typeof s.countIn === 'boolean') bt.countIn = s.countIn;
@@ -1380,45 +1380,58 @@ function btArm(t0){
   }
   btS = {
     anchorT: t0, anchorBar: 0, barDur: 240 / bt.bpm,
-    barNo: 0, step: 0, chord: 0, barIn: 0, hatBar: 0,
+    barNo: 0, step: 0, chord: 0, chordStep: 0, padDone: false, hatBar: 0,
     counting: bt.countIn, pad: null, queue: [], t0,
   };
 }
 function btBarTime(s, n){ return s.anchorT + (n - s.anchorBar) * s.barDur; }
 function btStepTime(s){ return btBarTime(s, s.barNo) + s.step * s.barDur / 8; }
 
-/* The chord that follows the current bar, counting any change waiting to apply. */
+/* The chord after this one. A waiting change only counts if this chord would
+   reach the bar line, since changes apply there. */
 function btNextChord(s){
+  const steps = btPlan.per * 8, toBarLine = s.chordStep + (8 - s.step);
+  if(toBarLine > steps) return btPlan.chords[(s.chord + 1) % btPlan.chords.length];
   const plan = btPending ? btPending.plan : btPlan;
   if(btPending && btPending.restart) return plan.chords[0];
-  if(s.counting) return plan.chords[s.chord];
-  const idx = s.barIn + 1 >= plan.per ? s.chord + 1 : s.chord;
+  const idx = toBarLine === steps ? s.chord + 1 : s.chord;
   return plan.chords[idx % plan.chords.length];
 }
 function btBeginBar(s){
   const t = btBarTime(s, s.barNo), dur = 240 / bt.bpm;
   if(dur !== s.barDur){ s.anchorT = t; s.anchorBar = s.barNo; s.barDur = dur; }
   if(s.counting){
-    s.queue.push({ t, dur, count: true, plan: btPending ? btPending.plan : btPlan, idx: -1, beatsAtBarStart: 4 });
+    s.queue.push({ t, beat: dur / 4, count: true, plan: btPending ? btPending.plan : btPlan,
+                   idx: -1, step: 0, beatsAtStart: 4 });
     return;
   }
   if(btPending){
     if(s.pad){ btPadRelease(s.pad, t); s.pad = null; }
-    if(btPending.restart){ s.chord = 0; s.barIn = 0; s.hatBar = 0; }
+    if(btPending.restart){ s.chord = 0; s.chordStep = 0; s.hatBar = 0; }
     btPlan = btPending.plan;
     btPending = null;
+    s.padDone = false;
   }
-  const plan = btPlan, chord = plan.chords[s.chord];
-  const lastBar = s.barIn === plan.per - 1;
-  // a bar that has already gone by (timers stalled) doesn't need its pad
-  const stale = t + dur < ctx.currentTime;
-  if(!s.pad && !stale) s.pad = btPadStart(t, chord);
-  if(lastBar && s.pad){ btPadRelease(s.pad, t + dur); s.pad = null; }
-  s.queue.push({
-    t, dur, plan, idx: s.chord,
-    beatsAtBarStart: (plan.per - s.barIn) * 4,
-    pos: s.chord * plan.per + s.barIn + 1, loopBars: plan.loopBars,
-  });
+}
+/* Starts the pad and books its release. The release waits until the chord ends
+   inside the current bar, because BPM can still change at any later bar line. */
+function btChordStep(s, t){
+  const plan = btPlan, left = plan.per * 8 - s.chordStep;
+  // a step that has already gone by (timers stalled) doesn't need its pad
+  if(!s.pad && !s.padDone && t + s.barDur / 8 >= ctx.currentTime){
+    s.pad = btPadStart(t, plan.chords[s.chord]);
+  }
+  if(s.pad && s.step + left <= 8){
+    btPadRelease(s.pad, btBarTime(s, s.barNo) + (s.step + left) * s.barDur / 8);
+    s.pad = null;
+    s.padDone = true;
+  }
+  if(s.step === 0 || s.chordStep === 0){
+    s.queue.push({
+      t, beat: s.barDur / 4, plan, idx: s.chord, step: s.step, beatsAtStart: left / 2,
+      pos: Math.floor(s.chord * plan.per + s.chordStep / 8) + 1, loopBars: plan.loopBars,
+    });
+  }
 }
 function btDrumStep(s, t){
   if(s.step === 0 || s.step === 4 || s.step === 5) btKick(t);
@@ -1430,30 +1443,34 @@ function btBassStep(s, t){
   if(bt.bass === 'eighths'){
     btBassNote(t, root, s.barDur / 8);
   }else if(bt.bass === 'quarters' && s.step % 2 === 0){
-    let midi = root;
-    if(s.step === 2) midi = root + chord.fifth;
-    if(s.step === 4) midi = root + 12;
-    if(s.step === 6){
-      const leaving = s.barIn === btPlan.per - 1 || !!btPending;
-      midi = leaving ? btBassRoot(btNextChord(s).pc) - 1 : root + chord.fifth;
-    }
+    // root, 5th, octave, 5th, with the chord's last beat leading into the next one
+    const leaving = s.chordStep + 2 >= btPlan.per * 8 || (!!btPending && s.step === 6);
+    const midi = leaving ? btBassRoot(btNextChord(s).pc) - 1
+      : root + [0, chord.fifth, 12, chord.fifth][(s.chordStep % 8) / 2];
     btBassNote(t, midi, s.barDur / 4);
   }
 }
 function btDoStep(s){
   if(s.step === 0) btBeginBar(s);
   const t = btStepTime(s);
+  if(!s.counting) btChordStep(s, t);
   // timers stalled past this step: stay on the grid but don't play it late
   if(t >= ctx.currentTime){
     if(s.counting){ if(s.step % 2 === 0) btStick(t); }
     else { btDrumStep(s, t); btBassStep(s, t); }
   }
   s.step++;
+  if(!s.counting){
+    s.chordStep++;
+    if(s.chordStep >= btPlan.per * 8){
+      s.chordStep = 0;
+      s.chord = (s.chord + 1) % btPlan.chords.length;
+      s.padDone = false;
+    }
+  }
   if(s.step === 8){
     s.step = 0; s.barNo++;
-    if(s.counting){ s.counting = false; return; }
-    s.hatBar++; s.barIn++;
-    if(s.barIn >= btPlan.per){ s.barIn = 0; s.chord = (s.chord + 1) % btPlan.chords.length; }
+    if(s.counting) s.counting = false; else s.hatBar++;
   }
 }
 function btSchedUntil(horizon){
@@ -1527,7 +1544,7 @@ function btApplySettings(){
         r.plan.norm !== btPlan.norm || r.plan.per !== btPlan.per;
     btPending = { plan: r.plan, restart };
     const last = btS.queue[btS.queue.length - 1];
-    if(last && !last.count) last.beatsAtBarStart = 4;
+    if(last && !last.count) last.beatsAtStart = Math.min(last.beatsAtStart, (8 - last.step) / 2);
   }else{
     btPlan = r.plan;
     btRender();
@@ -1574,10 +1591,10 @@ function btRender(){
   while(q.length > 1 && q[1].t <= now) q.shift();
   const e = q[0];
   if(!e) return;
-  const beat = Math.max(0, Math.min(3, Math.floor((now - e.t) / (e.dur / 4))));
+  const beat = Math.max(0, Math.min(e.beatsAtStart - 1, Math.floor((now - e.t) / e.beat)));
   btRenderChips(e.plan, e.idx);
   btSetText(elNext, e.count ? 'Starting in' : 'Change in');
-  btSetText(elCount, String(e.beatsAtBarStart - beat));
+  btSetText(elCount, String(e.beatsAtStart - beat));
   btSetText(elBar, e.count ? 'Count-in' : 'Bar ' + e.pos + ' / ' + e.loopBars);
 }
 function btFrame(){
