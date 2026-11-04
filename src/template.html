@@ -1188,6 +1188,11 @@ function btLoadState(){
   }
   if(Array.isArray(p)) btCustom = p.filter((x) => x && typeof x.name === 'string' &&
       typeof x.prog === 'string' && btBuildPlan(0, x.prog, 1).plan);
+  // Older saves could hold other chords than the name says. A name that reads as chords wins.
+  for(const x of btCustom){
+    const named = btBuildPlan(0, x.name, 1).plan;
+    if(named) x.prog = named.norm;
+  }
   btPlan = btBuildPlan(bt.key, bt.prog, bt.per).plan;
 }
 
