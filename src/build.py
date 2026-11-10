@@ -279,7 +279,10 @@ def main():
     def BL(reason_bar):  # Reason bar -> timeline beat
         return (reason_bar - 2) * 4.0
     bi_pickup = pickup_start(bi_notes, BL(3), 2)
-    bi_hard = hardest_window(bi_notes, bi_bpm)
+    # tremolo picking from bar 17 beat 1.5 to the end is not "hardest" per Austin;
+    # score only the notes before it so no window can reach into it
+    bi_trem = BL(17) + 0.5
+    bi_hard = hardest_window([n for n in bi_notes if n['b'] < bi_trem], bi_bpm)
     bi_last = max(n['b'] + n['d'] for n in bi_notes)
     bi = {
         'id': 'beatit', 'name': 'Beat It', 'emoji': '🎸', 'theme': 'beatit',
