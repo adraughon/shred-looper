@@ -127,6 +127,8 @@ h1{
 .owCurb.l{left:6px; background:repeating-linear-gradient(135deg, rgba(209,56,44,.6) 0 13px, rgba(242,243,246,.4) 13px 26px);}
 .owCurb.r{right:6px; background:repeating-linear-gradient(45deg, rgba(209,56,44,.6) 0 13px, rgba(242,243,246,.4) 13px 26px);}
 .owFinale{position:absolute; left:0; width:100%; z-index:1; pointer-events:none;}
+.owUndecidedHead{position:absolute; left:0; width:100%; text-align:center; z-index:3; pointer-events:none;
+  font:700 9px/1 ui-monospace, "SF Mono", monospace; letter-spacing:3px; color:var(--dim);}
 
 .owNode{position:absolute; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; z-index:3;}
 .owNode.unlocked{cursor:pointer;}
@@ -894,15 +896,19 @@ const MAP_STAGES = [
   { label: '1-1', songId: 'dolphin', world: 1, cleared: true },
   { label: '1-2', songId: 'world', world: 1, cleared: true },
   { label: '1-Boss', title: 'Texas Flood', sub: 'Stevie Ray Vaughan', emoji: '🌊', world: 1, cleared: true },
-  { label: '2-1', title: 'No Pedals Needed', sub: 'Matthew Scott', emoji: '🔌', world: 2 },
-  { label: '2-2', title: 'GOAT', sub: 'Tim Henson', emoji: '🐐', world: 2 },
-  { label: '2-3', title: 'Ion Drive', sub: 'Joel Gregoire', emoji: '🛸', world: 2 },
-  { label: '2-4', songId: 'beatit', world: 2 },
+  { label: '2-1', title: 'GOAT', sub: 'Tim Henson', emoji: '🐐', world: 2 },
+  { label: '2-2', title: 'Ion Drive', sub: 'Joel Gregoire', emoji: '🛸', world: 2 },
+  { label: '2-3', songId: 'beatit', world: 2 },
   { label: '2-Boss', title: 'Miles of Machines', sub: 'Jeff Loomis', emoji: '⚙️', world: 2 },
   { label: '3-1', title: 'Pentatonic Licks', sub: 'Roy G Ziv', emoji: '🐆', world: 3 },
   { label: '3-2', title: 'Technical Difficulties', sub: 'Paul Gilbert', emoji: '🏎️', world: 3 },
   { label: '3-3', title: 'Eruption', sub: 'Eddie Van Halen', emoji: '🌋', world: 3 },
   { label: '3-Boss', title: 'Cliffs of Dover', sub: 'Eric Johnson', emoji: '🇬🇧', world: 3 },
+];
+// not on the path: dropped or not picked yet, shown below the finish line
+const MAP_UNDECIDED = [
+  { title: 'No Pedals Needed', sub: 'Matthew Scott', emoji: '🔌' },
+  { title: 'Bonamassa Lick', sub: 'Joe Bonamassa', emoji: '🕶️' },
 ];
 const owWrap = $('owWrap'), owPath = $('owPath');
 function worldMotif(w){
@@ -990,7 +996,7 @@ function worldMotif(w){
   return '<div class="owCurb l"></div><div class="owCurb r"></div>';
 }
 function renderMap(){
-  owWrap.querySelectorAll('.owNode,.owWorldBg,.owFinale').forEach((el) => el.remove());
+  owWrap.querySelectorAll('.owNode,.owWorldBg,.owFinale,.owUndecidedHead').forEach((el) => el.remove());
   const width = owWrap.clientWidth || 390;
   const cx = width / 2, amp = Math.min(90, width * (90 / 390)), rowH = 150, startY = 150;
   const nodes = MAP_STAGES.map((st, i) => {
@@ -1076,6 +1082,33 @@ function renderMap(){
       confetti +
     '</svg>';
   owWrap.appendChild(finale);
+
+  // undecided levels: a row below the finish, off the path
+  let fullH = totalH;
+  if(MAP_UNDECIDED.length){
+    const headTop = totalH + 28;
+    const head = document.createElement('div');
+    head.className = 'owUndecidedHead';
+    head.style.top = headTop + 'px';
+    head.textContent = 'UNDECIDED';
+    owWrap.appendChild(head);
+    const gap = 150, nodeW = 96;  // centered row, same middle as the path
+    let rowBottom = headTop;
+    MAP_UNDECIDED.forEach((u, i) => {
+      const div = document.createElement('div');
+      div.className = 'owNode locked';
+      div.style.left = (cx + (i - (MAP_UNDECIDED.length - 1) / 2) * gap - nodeW / 2) + 'px';
+      div.style.top = (headTop + 26) + 'px';
+      div.style.width = nodeW + 'px';
+      div.innerHTML = '<div class="owBubble">' + u.emoji + '</div>' +
+        '<div class="owLockText"><div class="owTitle">' + u.title + '</div>' +
+        '<div class="owSub">' + u.sub + '</div></div>';
+      owWrap.appendChild(div);
+      rowBottom = Math.max(rowBottom, div.offsetTop + div.offsetHeight);
+    });
+    fullH = Math.round(rowBottom + 24);
+    owWrap.style.height = fullH + 'px';
+  }
 
   const pts = nodes.map((n) => ({ x: n.cx, y: n.cy }));
   let d = 'M ' + pts[0].x.toFixed(1) + ' ' + pts[0].y;
