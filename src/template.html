@@ -888,20 +888,21 @@ function loadSong(idx){
 
 /* ---------------- overworld map ---------------- */
 const SUBS = { crazy: 'Randy Rhoads', dolphin: 'Mario Kart 8', world: 'Brad Paisley', beatit: 'Michael Jackson (Van Halen)' };
+// cleared: Austin has beaten it (shows a tick after the title)
 const MAP_STAGES = [
-  { label: 'Tutorial', songId: 'crazy', world: 0 },
-  { label: '1-1', songId: 'dolphin', world: 1 },
-  { label: '1-2', songId: 'world', world: 1 },
-  { label: '1-3', title: 'GOAT', sub: 'Tim Henson', emoji: '🐐', world: 1 },
-  { label: '1-Boss', title: 'Texas Flood', sub: 'Stevie Ray Vaughan', emoji: '🌊', world: 1 },
+  { label: 'Tutorial', songId: 'crazy', world: 0, cleared: true },
+  { label: '1-1', songId: 'dolphin', world: 1, cleared: true },
+  { label: '1-2', songId: 'world', world: 1, cleared: true },
+  { label: '1-Boss', title: 'Texas Flood', sub: 'Stevie Ray Vaughan', emoji: '🌊', world: 1, cleared: true },
   { label: '2-1', title: 'No Pedals Needed', sub: 'Matthew Scott', emoji: '🔌', world: 2 },
-  { label: '2-2', title: 'Ion Drive', sub: 'Joel Gregoire', emoji: '🛸', world: 2 },
-  { label: '2-3', title: 'Miles of Machines', sub: 'Jeff Loomis', emoji: '⚙️', world: 2 },
-  { label: '2-Boss', songId: 'beatit', world: 2 },
+  { label: '2-2', title: 'GOAT', sub: 'Tim Henson', emoji: '🐐', world: 2 },
+  { label: '2-3', title: 'Ion Drive', sub: 'Joel Gregoire', emoji: '🛸', world: 2 },
+  { label: '2-4', songId: 'beatit', world: 2 },
+  { label: '2-Boss', title: 'Miles of Machines', sub: 'Jeff Loomis', emoji: '⚙️', world: 2 },
   { label: '3-1', title: 'Pentatonic Licks', sub: 'Roy G Ziv', emoji: '🐆', world: 3 },
   { label: '3-2', title: 'Technical Difficulties', sub: 'Paul Gilbert', emoji: '🏎️', world: 3 },
-  { label: '3-3', title: 'Cliffs of Dover', sub: 'Eric Johnson', emoji: '🇬🇧', world: 3 },
-  { label: '3-Boss', title: 'Eruption', sub: 'Eddie Van Halen', emoji: '🌋', world: 3 },
+  { label: '3-3', title: 'Eruption', sub: 'Eddie Van Halen', emoji: '🌋', world: 3 },
+  { label: '3-Boss', title: 'Cliffs of Dover', sub: 'Eric Johnson', emoji: '🇬🇧', world: 3 },
 ];
 const owWrap = $('owWrap'), owPath = $('owPath');
 function worldMotif(w){
@@ -1001,7 +1002,7 @@ function renderMap(){
     return {
       st, song, isBoss, unlocked, world: st.world,
       emoji: st.emoji || (song ? song.emoji : ''),
-      title: song ? song.name : st.title,
+      title: (song ? song.name : st.title) + (st.cleared ? ' ✅' : ''),
       sub: st.songId ? SUBS[st.songId] : (st.sub || ''),
       cx: x, cy: y, left: x - w / 2, top: y - off, w,
     };
