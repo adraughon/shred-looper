@@ -268,7 +268,35 @@ def main():
         tw['sections'].append({'name': f'Bars {b0 + 1}-{b0 + 3}',
                                'a': b0 * 4.0, 'b': (b0 + 3) * 4.0})
 
-    for song, hard in ((ct, ct_hard), (ds, ds_hard), (tw, tw_hard)):
+    # ---- Beat It solo (Austin's Reason edit; labels = his Reason bars) ----
+    # His export shifts the whole solo 4.197 beats late (lined up to the video),
+    # so notes sit 0.197 beat behind his bar lines. Trimming exactly that much
+    # puts them on the grid the drums play on; Reason bar 2 == timeline beat 0.
+    bi_trim = 4.1970703125   # = 3027 ticks @ 15360 tpb
+    bi_notes = parse_song(SRC / 'midi' / 'beat_it_adjusted.mid', 2,
+                          trim_before_beat=bi_trim)
+    bi_bpm = 139.0
+    def BL(reason_bar):  # Reason bar -> timeline beat
+        return (reason_bar - 2) * 4.0
+    bi_pickup = pickup_start(bi_notes, BL(3), 2)
+    bi_hard = hardest_window(bi_notes, bi_bpm)
+    bi_last = max(n['b'] + n['d'] for n in bi_notes)
+    bi = {
+        'id': 'beatit', 'name': 'Beat It', 'emoji': '🎸', 'theme': 'beatit',
+        'origBpm': bi_bpm, 'barOffset': 1,
+        'totalBars': int(math.ceil(bi_last / 4.0)),
+        'notes': bi_notes,
+        'sections': [
+            {'name': 'Opening Ceremonies', 'a': bi_pickup, 'b': BL(5) + 1},  # up to the tapping run
+            {'name': 'Good Morning America', 'a': BL(5), 'b': BL(7)},
+            {'name': 'Warmed Up Yet?', 'a': BL(7), 'b': BL(9)},
+            {'name': 'Short Break', 'a': BL(9), 'b': BL(11)},
+            {'name': 'Repeat Repeat', 'a': BL(11), 'b': BL(13)},
+            {'name': 'Outro Lick', 'a': BL(13), 'b': BL(18)},
+        ],
+    }
+
+    for song, hard in ((ct, ct_hard), (ds, ds_hard), (tw, tw_hard), (bi, bi_hard)):
         a, b = hard['a'], hard['b']
         song['hardest'] = {
             'a': a, 'b': half_bar_len(a, b), 'eq16': hard['eq16'],
@@ -292,7 +320,7 @@ def main():
     icon192 = make_icon_png(192, '#111111', '#e6b93c')
     icon512 = make_icon_png(512, '#111111', '#e6b93c')
 
-    data = {'cacheVersion': cache_version, 'songs': [ct, ds, tw], 'drums': drums}
+    data = {'cacheVersion': cache_version, 'songs': [ct, ds, tw, bi], 'drums': drums}
 
     template = (SRC / 'template.html').read_text()
     html = (template
@@ -338,6 +366,8 @@ def main():
     print(f"  Crazy Train hardest: beat {ct_hard['a']} ~16ths@{ct_hard['eq16']}")
     print(f"  Dolphin hardest: beat {ds_hard['a']} ~16ths@{ds_hard['eq16']}")
     print(f"  The World ({tw_bpm}bpm) hardest: beat {tw_hard['a']} ~16ths@{tw_hard['eq16']}")
+    print(f"  Beat It ({bi_bpm}bpm) hardest: Reason bar {bi_hard['a'] / 4 + 2:.2f} ~16ths@{bi_hard['eq16']}"
+          f"  pickup beat {bi_pickup}  {len(bi_notes)} notes  {bi['totalBars']} bars")
 
 if __name__ == '__main__':
     main()

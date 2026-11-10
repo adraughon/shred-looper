@@ -43,6 +43,15 @@ body[data-theme="world"]{
          radial-gradient(circle at 55px 5px, #8e44ad 3px, transparent 3.6px) 0 0/60px 10px repeat-x,
          #2a5c41;
 }
+body[data-theme="beatit"]{
+  /* Frankenstrat: black body, red paint, white + black tape stripes */
+  --bg:#0b0b0d; --card:#151517; --card2:#1d1d20; --fg:#f4f1ea; --dim:#8f8f96;
+  --accent:#e8322b; --line:#252528;
+  --shadow:0 10px 30px rgba(0,0,0,.5);
+  --band:repeating-linear-gradient(118deg,
+           #e8322b 0 16px, #f4f1ea 16px 20px, #e8322b 20px 30px,
+           #0b0b0d 30px 34px, #e8322b 34px 52px, #f4f1ea 52px 55px, #0b0b0d 55px 59px);
+}
 body[data-theme="map"]{
   --bg:#0d0f13; --card:#171a21; --card2:#1f232d; --fg:#eef1f6; --dim:#8b92a1;
   --accent:#ffb020; --line:rgba(255,255,255,.09);
@@ -878,7 +887,7 @@ function loadSong(idx){
 }
 
 /* ---------------- overworld map ---------------- */
-const SUBS = { crazy: 'Randy Rhoads', dolphin: 'Mario Kart 8', world: 'Brad Paisley' };
+const SUBS = { crazy: 'Randy Rhoads', dolphin: 'Mario Kart 8', world: 'Brad Paisley', beatit: 'Michael Jackson (Van Halen)' };
 const MAP_STAGES = [
   { label: 'Tutorial', songId: 'crazy', world: 0 },
   { label: '1-1', songId: 'dolphin', world: 1 },
@@ -888,7 +897,7 @@ const MAP_STAGES = [
   { label: '2-1', title: 'No Pedals Needed', sub: 'Matthew Scott', emoji: '🔌', world: 2 },
   { label: '2-2', title: 'Ion Drive', sub: 'Joel Gregoire', emoji: '🛸', world: 2 },
   { label: '2-3', title: 'Miles of Machines', sub: 'Jeff Loomis', emoji: '⚙️', world: 2 },
-  { label: '2-Boss', title: 'Beat It', sub: 'Michael Jackson (Van Halen)', emoji: '🎸', world: 2 },
+  { label: '2-Boss', songId: 'beatit', world: 2 },
   { label: '3-1', title: 'Pentatonic Licks', sub: 'Roy G Ziv', emoji: '🐆', world: 3 },
   { label: '3-2', title: 'Technical Difficulties', sub: 'Paul Gilbert', emoji: '🏎️', world: 3 },
   { label: '3-3', title: 'Cliffs of Dover', sub: 'Eric Johnson', emoji: '🇬🇧', world: 3 },
