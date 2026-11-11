@@ -52,6 +52,14 @@ body[data-theme="beatit"]{
            #e8322b 0 16px, #f4f1ea 16px 20px, #e8322b 20px 30px,
            #0b0b0d 30px 34px, #e8322b 34px 52px, #f4f1ea 52px 55px, #0b0b0d 55px 59px);
 }
+body[data-theme="ion"]{
+  /* synthwave: dark purple, hot pink notes, cyan grid */
+  --bg:#120a1c; --card:#1b1128; --card2:#241733; --fg:#f3eefa; --dim:#8e80a3;
+  --accent:#ff4fa3; --line:#2b1d3d; --loop:#4ff0ff;
+  --shadow:0 10px 30px rgba(0,0,0,.5);
+  --band:linear-gradient(#4ff0ff, #4ff0ff) 0 50%/100% 1px no-repeat,
+         repeating-linear-gradient(90deg, #4ff0ff 0 2px, #2a1640 2px 22px);
+}
 body[data-theme="map"]{
   --bg:#0d0f13; --card:#171a21; --card2:#1f232d; --fg:#eef1f6; --dim:#8b92a1;
   --accent:#ffb020; --line:rgba(255,255,255,.09);
@@ -66,6 +74,7 @@ body[data-theme="backing"]{
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0; padding:0;}
 body{
+  --loop:var(--fg);  /* loop-note color; a theme can give it its own */
   background:var(--bg); color:var(--fg);
   font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
   padding:calc(env(safe-area-inset-top) + 10px) 14px 44px;
@@ -762,6 +771,7 @@ function renderStatic(){
   themeCols = {
     grid: css.getPropertyValue('--line').trim(),
     fg: css.getPropertyValue('--fg').trim(),
+    loop: css.getPropertyValue('--loop').trim(),
     accent: css.getPropertyValue('--accent').trim(),
     dim: css.getPropertyValue('--dim').trim(),
   };
@@ -801,7 +811,7 @@ function draw(){
   if(loopOn && loopB > loopA && geom){
     // loop indication: notes inside the loop take the secondary color
     const y = (p) => geom.laneH - (p - geom.minP) / (geom.maxP - geom.minP) * (geom.laneH - 8) - 4;
-    laneCtx.fillStyle = themeCols.fg;
+    laneCtx.fillStyle = themeCols.loop;
     let i = lowerBound(notes, loopA);
     while(i < notes.length && notes[i].b < loopB - 1e-9){
       const n = notes[i];
@@ -890,7 +900,7 @@ function loadSong(idx){
 }
 
 /* ---------------- overworld map ---------------- */
-const SUBS = { crazy: 'Randy Rhoads', dolphin: 'Mario Kart 8', world: 'Brad Paisley', beatit: 'Michael Jackson (Van Halen)' };
+const SUBS = { crazy: 'Randy Rhoads', dolphin: 'Mario Kart 8', world: 'Brad Paisley', beatit: 'Michael Jackson (Van Halen)', ion: 'Joel Gregoire' };
 // cleared: Austin has beaten it (shows a tick after the title)
 // wip: track is being made; shows In progress instead of Locked
 const MAP_STAGES = [
@@ -899,7 +909,7 @@ const MAP_STAGES = [
   { label: '1-2', songId: 'world', world: 1, cleared: true },
   { label: '1-Boss', title: 'Texas Flood', sub: 'Stevie Ray Vaughan', emoji: '🌊', world: 1, cleared: true },
   { label: '2-1', title: 'GOAT', sub: 'Tim Henson', emoji: '🐐', world: 2, wip: true },
-  { label: '2-2', title: 'Ion Drive', sub: 'Joel Gregoire', emoji: '🛸', world: 2, wip: true },
+  { label: '2-2', songId: 'ion', world: 2 },
   { label: '2-3', songId: 'beatit', world: 2 },
   { label: '2-Boss', title: 'Miles of Machines', sub: 'Jeff Loomis', emoji: '⚙️', world: 2 },
   { label: '3-1', title: 'Pentatonic Licks', sub: 'Roy G Ziv', emoji: '🐆', world: 3 },

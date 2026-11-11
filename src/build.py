@@ -299,7 +299,29 @@ def main():
         ],
     }
 
-    for song, hard in ((ct, ct_hard), (ds, ds_hard), (tw, tw_hard), (bi, bi_hard)):
+    # ---- Ion Drive (Joel Gregoire / Stride): one 4-bar phrase, played 5x ----
+    # The export holds the phrase twice (bars 1-8); the song loops it 5 times.
+    id_raw = parse_song(SRC / 'midi' / 'ion_drive.mid', 3)
+    id_phrase = [n for n in id_raw if n['b'] < 16]
+    id_second = [dict(n, b=round(n['b'] - 16, 4)) for n in id_raw if 16 <= n['b'] < 32]
+    if id_second != id_phrase or any(n['b'] >= 32 for n in id_raw):
+        sys.exit('Ion Drive: export is no longer "phrase x2" (bars 5-8 != 1-4); '
+                 'update the build before tiling')
+    id_notes = [dict(n, b=round(n['b'] + 16 * k, 4)) for k in range(5) for n in id_phrase]
+    id_bpm = 155.0
+    id_hard = hardest_window(id_notes, id_bpm)
+    io = {
+        'id': 'ion', 'name': 'Ion Drive', 'emoji': '🛸', 'theme': 'ion',
+        'origBpm': id_bpm, 'barOffset': 0,
+        'totalBars': 20,
+        'notes': id_notes,
+        'sections': [
+            {'name': 'The Phrase', 'a': 0.0, 'b': 16.0},
+            {'name': 'Whole Song', 'a': 0.0, 'b': 80.0},
+        ],
+    }
+
+    for song, hard in ((ct, ct_hard), (ds, ds_hard), (tw, tw_hard), (bi, bi_hard), (io, id_hard)):
         a, b = hard['a'], hard['b']
         song['hardest'] = {
             'a': a, 'b': half_bar_len(a, b), 'eq16': hard['eq16'],
@@ -323,7 +345,7 @@ def main():
     icon192 = make_icon_png(192, '#111111', '#e6b93c')
     icon512 = make_icon_png(512, '#111111', '#e6b93c')
 
-    data = {'cacheVersion': cache_version, 'songs': [ct, ds, tw, bi], 'drums': drums}
+    data = {'cacheVersion': cache_version, 'songs': [ct, ds, tw, bi, io], 'drums': drums}
 
     template = (SRC / 'template.html').read_text()
     html = (template
@@ -371,6 +393,8 @@ def main():
     print(f"  The World ({tw_bpm}bpm) hardest: beat {tw_hard['a']} ~16ths@{tw_hard['eq16']}")
     print(f"  Beat It ({bi_bpm}bpm) hardest: Reason bar {bi_hard['a'] / 4 + 2:.2f} ~16ths@{bi_hard['eq16']}"
           f"  pickup beat {bi_pickup}  {len(bi_notes)} notes  {bi['totalBars']} bars")
+    print(f"  Ion Drive ({id_bpm}bpm) hardest: bar {id_hard['a'] / 4 + 1:.2f} ~16ths@{id_hard['eq16']}"
+          f"  {len(id_notes)} notes  {io['totalBars']} bars")
 
 if __name__ == '__main__':
     main()
