@@ -913,15 +913,16 @@ const MAP_STAGES = [
   { label: '2-2', songId: 'ion', world: 2 },
   { label: '2-3', songId: 'beatit', world: 2 },
   { label: '2-Boss', title: 'Miles of Machines', sub: 'Jeff Loomis', emoji: '⚙️', world: 2 },
-  { label: '3-1', title: 'Pentatonic Licks', sub: 'Roy G Ziv', emoji: '🐆', world: 3 },
-  { label: '3-2', title: 'Technical Difficulties', sub: 'Paul Gilbert', emoji: '🏎️', world: 3 },
-  { label: '3-3', title: 'Eruption', sub: 'Eddie Van Halen', emoji: '🌋', world: 3 },
+  // World 3: the 180 wall (F1 race course), where all-pick gets tested
+  { label: '3-1', title: 'Eruption', sub: 'Eddie Van Halen', emoji: '🌋', world: 3 },
+  { label: '3-2', title: 'Angel of Mercy', sub: 'Joe Bonamassa', emoji: '🕶️', world: 3 },
+  { label: '3-3', title: 'Pentatonic Licks', sub: 'Roy G Ziv', emoji: '🐆', world: 3 },
+  { label: '3-4', title: 'Technical Difficulties', sub: 'Racer X', emoji: '🏎️', world: 3 },
   { label: '3-Boss', title: 'Cliffs of Dover', sub: 'Eric Johnson', emoji: '🇬🇧', world: 3 },
 ];
 // not on the path: dropped or not picked yet, shown below the finish line
 const MAP_UNDECIDED = [
   { title: 'No Pedals Needed', sub: 'Matthew Scott', emoji: '🔌' },
-  { title: 'Bonamassa Lick', sub: 'Joe Bonamassa', emoji: '🕶️' },
 ];
 const owWrap = $('owWrap'), owPath = $('owPath');
 function worldMotif(w){
