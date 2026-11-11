@@ -142,6 +142,7 @@ h1{
 .owNode{position:absolute; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; z-index:3;}
 .owNode.unlocked{cursor:pointer;}
 .owNode.noTrack{cursor:default;}
+.owNode.unlocked.cleared .owBubble, .owNode.boss.unlocked.cleared .owBubble{animation:none;}  /* done: no pulse */
 .owBadge{font:700 10px/1 ui-monospace, "SF Mono", monospace; letter-spacing:.06em; padding:3px 8px; border-radius:999px; white-space:nowrap;}
 .owNode.unlocked .owBadge{color:#1a1206; background:var(--accent); box-shadow:0 2px 6px var(--shadow);}
 .owNode.locked .owBadge{color:var(--dim); background:var(--card2); border:1px solid var(--line); opacity:.9;}
@@ -1030,13 +1031,14 @@ function renderMap(){
   const nodeEls = [];
   for(const n of nodes){
     const div = document.createElement('div');
-    // a cleared level looks beaten even with no track in the app (just not tappable)
-    const lit = n.unlocked || !!n.st.cleared;
+    // cleared and in-progress levels are lit even with no track in the app (just not tappable);
+    // cleared ones stop pulsing because they're done
+    const lit = n.unlocked || !!n.st.cleared || !!n.st.wip;
     div.className = 'owNode ' + (lit ? 'unlocked' : 'locked') + (n.isBoss ? ' boss' : '') + (n.world === 0 ? ' w0' : '') +
-      (lit && !n.unlocked ? ' noTrack' : '');
+      (lit && !n.unlocked ? ' noTrack' : '') + (n.st.cleared ? ' cleared' : '');
     div.style.left = n.left + 'px'; div.style.top = n.top + 'px'; div.style.width = n.w + 'px';
     const badgeText = n.isBoss ? '👑 BOSS' : n.st.label;
-    const subText = lit ? n.sub : (n.st.wip ? 'In progress' : 'Locked');
+    const subText = n.st.wip ? 'In progress' : (lit ? n.sub : 'Locked');
     const text = '<div class="owTitle">' + n.title + '</div>' +
       (subText ? '<div class="owSub">' + subText + '</div>' : '');
     div.innerHTML = '<div class="owBadge">' + badgeText + '</div>' +
