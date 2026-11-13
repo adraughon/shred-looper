@@ -341,6 +341,10 @@ input[type=range]{width:100%; min-height:44px; accent-color:var(--accent);}
     <button data-back="click">Click</button>
     <button data-back="drums" class="on">Drums</button>
   </div>
+  <div class="trainer">
+    <button id="btnCount">Count-in</button>
+    <span>1 bar of clicks after Play</span>
+  </div>
 </div>
 
 <div class="card">
@@ -438,8 +442,12 @@ let curBeat = 0;
 let loopOn = false, loopA = 0, loopB = 0;
 let pct = 100, backing = 'drums';
 let trainerOn = false, loopCount = 0;
+// count-in: one bar of clicks before the notes when Play is pressed (all songs, remembered)
+let countIn = true;
+try{ const c = localStorage.getItem('shredlooper.v1.countIn'); if(c !== null) countIn = c === '1'; }catch(e){}
 let schedTimer = null;
 const LOOKAHEAD = 0.18, TICK = 30;
+const BEATS_PER_BAR = 4;
 
 const $ = (id) => document.getElementById(id);
 const BEND_SCALE = 1, LEAD_VOL = 0.9, BACK_VOL = 0.8;
@@ -549,6 +557,7 @@ function clickTick(t, accent){
 /* ---------------- beat clock + scheduler ---------------- */
 function secPerBeat(){ return 60 / (song.origBpm * pct / 100); }
 function vAt(t){ return V0 + (t - T0) / spb; }
+function playheadV(){ return Math.max(V0, vAt(ctx.currentTime)); }  // parked at the start during a count-in
 function timeOfV(v){ return T0 + (v - V0) * spb; }
 function foldV(v){
   if(!loopOn || loopB - loopA < 0.5 || v < loopA) return v;
@@ -606,7 +615,7 @@ function schedulerTick(myToken){
 }
 
 /* ---------------- transport ---------------- */
-function startPlayback(fromBeat){
+function startPlayback(fromBeat, withCountIn){
   ensureCtx();
   const myToken = ++token;
   const go = () => {
@@ -617,7 +626,12 @@ function startPlayback(fromBeat){
     const headroom = warmed ? 0.12 : 0.30;
     warmed = true;
     spb = secPerBeat();
-    T0 = ctx.currentTime + headroom;
+    const lead = withCountIn ? BEATS_PER_BAR * spb : 0;
+    T0 = ctx.currentTime + headroom + lead;
+    if(withCountIn){
+      for(let k = 0; k < BEATS_PER_BAR; k++)
+        clickTick(T0 - (BEATS_PER_BAR - k) * spb, k === 0);
+    }
     V0 = fromBeat; schedV = fromBeat;
     playing = true;
     $('btnPlay').textContent = 'Pause';
@@ -638,7 +652,7 @@ function killVoices(){
 }
 function pause(){
   if(!playing) return;
-  curBeat = foldV(vAt(ctx.currentTime));
+  curBeat = foldV(playheadV());
   ++token; playing = false;
   killVoices();
   $('btnPlay').textContent = 'Play';
@@ -656,7 +670,7 @@ function togglePlay(){
   else {
     let b = curBeat;
     if(loopOn && (b < loopA - 8 || b >= loopB)) b = loopA;
-    startPlayback(b);
+    startPlayback(b, countIn);
   }
 }
 function seek(beat){
@@ -679,7 +693,8 @@ function setPct(p, silent){
       ' · ' + notes.length + ' notes';   // every block: double stops count as 2
   if(playing && ctx){
     const now = ctx.currentTime;
-    V0 = vAt(now); T0 = now; spb = secPerBeat();
+    if(now < T0) spb = secPerBeat();   // mid count-in: notes still start at T0, at the new tempo
+    else { V0 = vAt(now); T0 = now; spb = secPerBeat(); }
   }
   if(!silent) saveState();
 }
@@ -821,7 +836,7 @@ function draw(){
       i++;
     }
   }
-  const b = playing && ctx ? foldV(vAt(ctx.currentTime)) : curBeat;
+  const b = playing && ctx ? foldV(playheadV()) : curBeat;
   laneCtx.fillStyle = themeCols.dim;  // neutral playhead
   laneCtx.globalAlpha = 0.95;
   laneCtx.fillRect(Math.min(x(b), W - 2), 0, 2, laneH);
@@ -1879,6 +1894,12 @@ for(const b of document.querySelectorAll('[data-back]'))
     saveState();
   };
 $('trainN').onchange = () => saveState();
+$('btnCount').onclick = () => {
+  countIn = !countIn;
+  $('btnCount').classList.toggle('on', countIn);
+  try{ localStorage.setItem(LS + 'countIn', countIn ? '1' : '0'); }catch(e){}
+};
+$('btnCount').classList.toggle('on', countIn);
 
 document.addEventListener('keydown', (e) => {
   if(e.target.tagName === 'INPUT') return;
